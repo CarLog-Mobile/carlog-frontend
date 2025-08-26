@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { View, Text, TouchableOpacity, ScrollView, TextInput, Alert, StyleSheet, Dimensions } from 'react-native';
+import { View, Text, TouchableOpacity, ScrollView, TextInput, Alert, StyleSheet, Dimensions, Modal } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 
 const { width } = Dimensions.get('window');
@@ -7,11 +7,10 @@ const { width } = Dimensions.get('window');
 interface FuelEntry {
   id: string;
   date: string;
-  gallons: number;
-  costPerGallon: number;
+  liters: number;
+  costPerLiter: number;
   totalCost: number;
   mileage: number;
-  location: string;
   fuelType: string;
 }
 
@@ -20,58 +19,54 @@ export default function FuelScreen({ navigation, route }: any) {
     {
       id: '1',
       date: '2024-01-15',
-      gallons: 12.5,
-      costPerGallon: 3.25,
-      totalCost: 40.63,
-      mileage: 45000,
-      location: 'Shell Station',
-      fuelType: 'Regular'
+      liters: 45.0,
+      costPerLiter: 350.00,
+      totalCost: 15750.00,
+      mileage: 72420,
+      fuelType: '92 Octane'
     },
     {
       id: '2',
       date: '2024-01-08',
-      gallons: 11.8,
-      costPerGallon: 3.15,
-      totalCost: 37.17,
-      mileage: 44800,
-      location: 'Exxon',
-      fuelType: 'Regular'
+      liters: 42.5,
+      costPerLiter: 345.00,
+      totalCost: 14662.50,
+      mileage: 72000,
+      fuelType: '92 Octane'
     }
   ]);
 
-  const [showAddForm, setShowAddForm] = useState(false);
+  const [showAddModal, setShowAddModal] = useState(false);
   const [newEntry, setNewEntry] = useState({
-    gallons: '',
-    costPerGallon: '',
+    liters: '',
+    costPerLiter: '',
     mileage: '',
-    location: '',
-    fuelType: 'Regular'
+    fuelType: '92 Octane'
   });
 
   const addFuelEntry = () => {
-    if (!newEntry.gallons || !newEntry.costPerGallon || !newEntry.mileage) {
+    if (!newEntry.liters || !newEntry.costPerLiter || !newEntry.mileage) {
       Alert.alert('Error', 'Please fill in all required fields');
       return;
     }
 
-    const gallons = parseFloat(newEntry.gallons);
-    const costPerGallon = parseFloat(newEntry.costPerGallon);
-    const totalCost = gallons * costPerGallon;
+    const liters = parseFloat(newEntry.liters);
+    const costPerLiter = parseFloat(newEntry.costPerLiter);
+    const totalCost = liters * costPerLiter;
 
     const entry: FuelEntry = {
       id: Date.now().toString(),
       date: new Date().toISOString().split('T')[0],
-      gallons,
-      costPerGallon,
+      liters,
+      costPerLiter,
       totalCost,
       mileage: parseFloat(newEntry.mileage),
-      location: newEntry.location || 'Unknown',
       fuelType: newEntry.fuelType
     };
 
     setFuelEntries([entry, ...fuelEntries]);
-    setNewEntry({ gallons: '', costPerGallon: '', mileage: '', location: '', fuelType: 'Regular' });
-    setShowAddForm(false);
+    setNewEntry({ liters: '', costPerLiter: '', mileage: '', fuelType: '92 Octane' });
+    setShowAddModal(false);
   };
 
   const deleteEntry = (id: string) => {
@@ -85,9 +80,49 @@ export default function FuelScreen({ navigation, route }: any) {
     );
   };
 
-  const totalGallons = fuelEntries.reduce((sum, entry) => sum + entry.gallons, 0);
-  const totalCost = fuelEntries.reduce((sum, entry) => sum + entry.totalCost, 0);
-  const avgCostPerGallon = totalGallons > 0 ? totalCost / totalGallons : 0;
+  // Calculate fuel efficiency (km/L)
+  const calculateFuelEfficiency = () => {
+    if (fuelEntries.length < 2) return [];
+    
+    const sortedEntries = [...fuelEntries].sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime());
+    const efficiencyData = [];
+    
+    for (let i = 1; i < sortedEntries.length; i++) {
+      const distance = sortedEntries[i].mileage - sortedEntries[i-1].mileage;
+      const fuelUsed = sortedEntries[i].liters;
+      const efficiency = distance / fuelUsed;
+      
+      efficiencyData.push({
+        date: sortedEntries[i].date,
+        efficiency: efficiency.toFixed(1),
+        distance,
+        fuelUsed
+      });
+    }
+    
+    return efficiencyData.slice(-6); // Last 6 entries
+  };
+
+  // Calculate monthly fuel costs
+  const calculateMonthlyCosts = () => {
+    const monthlyData: { [key: string]: number } = {};
+    
+    fuelEntries.forEach(entry => {
+      const month = entry.date.substring(0, 7); // YYYY-MM format
+      if (!monthlyData[month]) {
+        monthlyData[month] = 0;
+      }
+      monthlyData[month] += entry.totalCost;
+    });
+    
+    return Object.entries(monthlyData)
+      .map(([month, cost]) => ({ month, cost }))
+      .sort((a, b) => a.month.localeCompare(b.month))
+      .slice(-6); // Last 6 months
+  };
+
+  const efficiencyData = calculateFuelEfficiency();
+  const monthlyCosts = calculateMonthlyCosts();
 
   return (
     <View style={styles.container}>
@@ -106,23 +141,74 @@ export default function FuelScreen({ navigation, route }: any) {
           <TouchableOpacity style={styles.iconButton}>
             <Ionicons name="filter" size={20} color="#1f2937" />
           </TouchableOpacity>
+          <TouchableOpacity style={styles.headerAddButton} onPress={() => setShowAddModal(true)}>
+            <Ionicons name="add" size={20} color="white" />
+          </TouchableOpacity>
         </View>
       </View>
 
       <ScrollView style={styles.scrollView}>
-        {/* Stats Cards */}
-        <View style={styles.statsRow}>
-          <View style={styles.statCard}>
-            <Text style={styles.statLabel}>Total Gallons</Text>
-            <Text style={styles.statValue}>{totalGallons.toFixed(1)}</Text>
+        {/* Charts Section */}
+        <View style={styles.chartsSection}>
+          {/* Fuel Efficiency Chart */}
+          <View style={styles.chartCard}>
+            <Text style={styles.chartTitle}>Fuel Efficiency (km/L)</Text>
+            <View style={styles.chartContainer}>
+              {efficiencyData.length > 0 ? (
+                <View style={styles.barChart}>
+                  {efficiencyData.map((item, index) => (
+                    <View key={index} style={styles.barContainer}>
+                      <View style={styles.barWrapper}>
+                        <View 
+                          style={[
+                            styles.bar, 
+                            { 
+                              height: Math.min(parseFloat(item.efficiency) * 8, 120),
+                              backgroundColor: parseFloat(item.efficiency) > 12 ? '#059669' : 
+                                              parseFloat(item.efficiency) > 8 ? '#f59e0b' : '#ef4444'
+                            }
+                          ]}
+                        />
+                      </View>
+                      <Text style={styles.barLabel}>{item.efficiency}</Text>
+                      <Text style={styles.barDate}>{item.date.split('-')[2]}</Text>
+                    </View>
+                  ))}
+                </View>
+              ) : (
+                <Text style={styles.noDataText}>Add more fuel entries to see efficiency data</Text>
+              )}
+            </View>
           </View>
-          <View style={styles.statCard}>
-            <Text style={styles.statLabel}>Total Cost</Text>
-            <Text style={styles.statValue}>${totalCost.toFixed(2)}</Text>
-          </View>
-          <View style={styles.statCard}>
-            <Text style={styles.statLabel}>Avg Price</Text>
-            <Text style={styles.statValue}>${avgCostPerGallon.toFixed(2)}</Text>
+
+          {/* Monthly Fuel Costs Chart */}
+          <View style={styles.chartCard}>
+            <Text style={styles.chartTitle}>Monthly Fuel Costs (LKR)</Text>
+            <View style={styles.chartContainer}>
+              {monthlyCosts.length > 0 ? (
+                <View style={styles.barChart}>
+                  {monthlyCosts.map((item, index) => (
+                    <View key={index} style={styles.barContainer}>
+                      <View style={styles.barWrapper}>
+                        <View 
+                          style={[
+                            styles.bar, 
+                            { 
+                              height: Math.min(item.cost / 1000, 120),
+                              backgroundColor: '#0656E0'
+                            }
+                          ]}
+                        />
+                      </View>
+                      <Text style={styles.barLabel}>{(item.cost / 1000).toFixed(0)}k</Text>
+                      <Text style={styles.barDate}>{item.month.split('-')[1]}</Text>
+                    </View>
+                  ))}
+                </View>
+              ) : (
+                <Text style={styles.noDataText}>Add fuel entries to see monthly costs</Text>
+              )}
+            </View>
           </View>
         </View>
 
@@ -136,22 +222,21 @@ export default function FuelScreen({ navigation, route }: any) {
             <View style={styles.fuelCardContent}>
               <View style={styles.fuelInfo}>
                 <View style={styles.fuelHeader}>
-                  <Text style={styles.fuelLocation}>{entry.location}</Text>
-                  <Text style={styles.fuelTotalCost}>${entry.totalCost.toFixed(2)}</Text>
+                  <Text style={styles.fuelDate}>{entry.date}</Text>
+                  <Text style={styles.fuelTotalCost}>LKR {entry.totalCost.toFixed(2)}</Text>
                 </View>
-                <Text style={styles.fuelDate}>{entry.date}</Text>
                 <View style={styles.fuelDetails}>
                   <View style={styles.fuelDetail}>
                     <Ionicons name="water" size={14} color="#9ca3af" />
-                    <Text style={styles.fuelDetailText}>{entry.gallons} gal</Text>
+                    <Text style={styles.fuelDetailText}>{entry.liters} L</Text>
                   </View>
                   <View style={styles.fuelDetail}>
                     <Ionicons name="card" size={14} color="#9ca3af" />
-                    <Text style={styles.fuelDetailText}>${entry.costPerGallon}/gal</Text>
+                    <Text style={styles.fuelDetailText}>LKR {entry.costPerLiter}/L</Text>
                   </View>
                   <View style={styles.fuelDetail}>
                     <Ionicons name="speedometer" size={14} color="#9ca3af" />
-                    <Text style={styles.fuelDetailText}>{entry.mileage} mi</Text>
+                    <Text style={styles.fuelDetailText}>{entry.mileage} km</Text>
                   </View>
                 </View>
                 <Text style={styles.fuelType}>{entry.fuelType}</Text>
@@ -160,84 +245,95 @@ export default function FuelScreen({ navigation, route }: any) {
                 onPress={() => deleteEntry(entry.id)}
                 style={styles.deleteButton}
               >
-                <Ionicons name="trash-outline" size={16} color="white" />
-                <Text style={styles.deleteButtonText}>Delete</Text>
+                <Ionicons name="trash-outline" size={14} color="white" />
               </TouchableOpacity>
             </View>
           </TouchableOpacity>
         ))}
+      </ScrollView>
 
-        {showAddForm && (
-          <View style={styles.formCard}>
-            <Text style={styles.formTitle}>Add Fuel Entry</Text>
-            <TextInput
-              style={styles.input}
-              placeholder="Gallons"
-              value={newEntry.gallons}
-              onChangeText={(text) => setNewEntry({...newEntry, gallons: text})}
-              keyboardType="numeric"
-            />
-            <TextInput
-              style={styles.input}
-              placeholder="Cost per Gallon ($)"
-              value={newEntry.costPerGallon}
-              onChangeText={(text) => setNewEntry({...newEntry, costPerGallon: text})}
-              keyboardType="numeric"
-            />
-            <TextInput
-              style={styles.input}
-              placeholder="Current Mileage"
-              value={newEntry.mileage}
-              onChangeText={(text) => setNewEntry({...newEntry, mileage: text})}
-              keyboardType="numeric"
-            />
-            <TextInput
-              style={styles.input}
-              placeholder="Location (optional)"
-              value={newEntry.location}
-              onChangeText={(text) => setNewEntry({...newEntry, location: text})}
-            />
-            <View style={styles.fuelTypeButtons}>
+      {/* Add Fuel Modal */}
+      <Modal
+        visible={showAddModal}
+        animationType="slide"
+        transparent={true}
+        onRequestClose={() => setShowAddModal(false)}
+      >
+        <View style={styles.modalOverlay}>
+          <View style={styles.modalContent}>
+            <View style={styles.modalHeader}>
+              <Text style={styles.modalTitle}>Add Fuel Entry</Text>
               <TouchableOpacity
-                style={[styles.fuelTypeButton, newEntry.fuelType === 'Regular' && styles.fuelTypeButtonActive]}
-                onPress={() => setNewEntry({...newEntry, fuelType: 'Regular'})}
+                onPress={() => setShowAddModal(false)}
+                style={styles.closeButton}
               >
-                <Text style={[styles.fuelTypeButtonText, newEntry.fuelType === 'Regular' && styles.fuelTypeButtonTextActive]}>Regular</Text>
-              </TouchableOpacity>
-              <TouchableOpacity
-                style={[styles.fuelTypeButton, newEntry.fuelType === 'Premium' && styles.fuelTypeButtonActive]}
-                onPress={() => setNewEntry({...newEntry, fuelType: 'Premium'})}
-              >
-                <Text style={[styles.fuelTypeButtonText, newEntry.fuelType === 'Premium' && styles.fuelTypeButtonTextActive]}>Premium</Text>
+                <Ionicons name="close" size={24} color="#6b7280" />
               </TouchableOpacity>
             </View>
-            <View style={styles.formButtons}>
+            
+            <ScrollView style={styles.modalScrollView}>
+              <TextInput
+                style={styles.input}
+                placeholder="Liters"
+                value={newEntry.liters}
+                onChangeText={(text) => setNewEntry({...newEntry, liters: text})}
+                keyboardType="numeric"
+              />
+              <TextInput
+                style={styles.input}
+                placeholder="Cost per Liter (LKR)"
+                value={newEntry.costPerLiter}
+                onChangeText={(text) => setNewEntry({...newEntry, costPerLiter: text})}
+                keyboardType="numeric"
+              />
+              <TextInput
+                style={styles.input}
+                placeholder="Current Mileage (km)"
+                value={newEntry.mileage}
+                onChangeText={(text) => setNewEntry({...newEntry, mileage: text})}
+                keyboardType="numeric"
+              />
+              
+              <Text style={styles.fuelTypeLabel}>Fuel Type</Text>
+              <View style={styles.fuelTypeButtons}>
+                <TouchableOpacity
+                  style={[styles.fuelTypeButton, newEntry.fuelType === '92 Octane' && styles.fuelTypeButtonActive]}
+                  onPress={() => setNewEntry({...newEntry, fuelType: '92 Octane'})}
+                >
+                  <Text style={[styles.fuelTypeButtonText, newEntry.fuelType === '92 Octane' && styles.fuelTypeButtonTextActive]}>92 Octane</Text>
+                </TouchableOpacity>
+                <TouchableOpacity
+                  style={[styles.fuelTypeButton, newEntry.fuelType === '95 Octane' && styles.fuelTypeButtonActive]}
+                  onPress={() => setNewEntry({...newEntry, fuelType: '95 Octane'})}
+                >
+                  <Text style={[styles.fuelTypeButtonText, newEntry.fuelType === '95 Octane' && styles.fuelTypeButtonTextActive]}>95 Octane</Text>
+                </TouchableOpacity>
+                <TouchableOpacity
+                  style={[styles.fuelTypeButton, newEntry.fuelType === 'Diesel' && styles.fuelTypeButtonActive]}
+                  onPress={() => setNewEntry({...newEntry, fuelType: 'Diesel'})}
+                >
+                  <Text style={[styles.fuelTypeButtonText, newEntry.fuelType === 'Diesel' && styles.fuelTypeButtonTextActive]}>Diesel</Text>
+                </TouchableOpacity>
+              </View>
+            </ScrollView>
+
+            <View style={styles.modalButtons}>
+              <TouchableOpacity
+                style={styles.cancelButton}
+                onPress={() => setShowAddModal(false)}
+              >
+                <Text style={styles.cancelButtonText}>Cancel</Text>
+              </TouchableOpacity>
               <TouchableOpacity
                 style={styles.addButton}
                 onPress={addFuelEntry}
               >
                 <Text style={styles.addButtonText}>Add Entry</Text>
               </TouchableOpacity>
-              <TouchableOpacity
-                style={styles.cancelButton}
-                onPress={() => setShowAddForm(false)}
-              >
-                <Text style={styles.cancelButtonText}>Cancel</Text>
-              </TouchableOpacity>
             </View>
           </View>
-        )}
-
-        {!showAddForm && (
-          <TouchableOpacity
-            style={styles.addNewButton}
-            onPress={() => setShowAddForm(true)}
-          >
-            <Ionicons name="add" size={24} color="white" />
-            <Text style={styles.addNewButtonText}>Add Fuel Entry</Text>
-          </TouchableOpacity>
-        )}
-      </ScrollView>
+        </View>
+      </Modal>
     </View>
   );
 }
@@ -284,36 +380,83 @@ const styles = StyleSheet.create({
     width: 36,
     height: 36,
   },
+  headerAddButton: {
+    backgroundColor: '#059669',
+    borderRadius: 8,
+    padding: 8,
+    alignItems: 'center',
+    justifyContent: 'center',
+    width: 36,
+    height: 36,
+  },
 
   scrollView: {
     flex: 1,
     paddingHorizontal: 16,
     paddingTop: 16,
   },
-  statsRow: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
+
+  // Charts Section
+  chartsSection: {
     marginBottom: 24,
-    gap: 8,
   },
-  statCard: {
+  chartCard: {
     backgroundColor: 'white',
     borderRadius: 18,
     padding: 16,
-    flex: 1,
-    alignItems: 'flex-start',
+    marginBottom: 16,
+    borderWidth: 1,
+    borderColor: '#e5e7eb',
   },
-  statValue: {
-    fontSize: 28,
-    fontFamily: 'Coinbase-Sans-Medium',
+  chartTitle: {
+    fontSize: 18,
+    fontWeight: '600',
     color: '#1f2937',
-    marginTop: 4,
+    marginBottom: 16,
   },
-  statLabel: {
-    fontSize: 14,
+  chartContainer: {
+    height: 140,
+    justifyContent: 'center',
+  },
+  barChart: {
+    flexDirection: 'row',
+    alignItems: 'flex-end',
+    justifyContent: 'space-around',
+    height: 120,
+    paddingHorizontal: 8,
+  },
+  barContainer: {
+    alignItems: 'center',
+    flex: 1,
+  },
+  barWrapper: {
+    height: 120,
+    justifyContent: 'flex-end',
+    marginBottom: 8,
+  },
+  bar: {
+    width: 20,
+    borderRadius: 10,
+    minHeight: 4,
+  },
+  barLabel: {
+    fontSize: 12,
+    fontWeight: '600',
+    color: '#374151',
+    marginBottom: 4,
+  },
+  barDate: {
+    fontSize: 10,
     color: '#6b7280',
-    fontFamily: 'Coinbase-Sans-Medium',
   },
+  noDataText: {
+    textAlign: 'center',
+    color: '#9ca3af',
+    fontSize: 14,
+    fontStyle: 'italic',
+  },
+
+  // Fuel Cards
   fuelCard: {
     backgroundColor: 'white',
     borderRadius: 18,
@@ -336,7 +479,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     marginBottom: 8,
   },
-  fuelLocation: {
+  fuelDate: {
     fontSize: 18,
     fontWeight: '600',
     color: '#1f2937',
@@ -345,11 +488,6 @@ const styles = StyleSheet.create({
     fontSize: 18,
     fontWeight: 'bold',
     color: '#059669',
-  },
-  fuelDate: {
-    color: '#6b7280',
-    fontSize: 16,
-    marginBottom: 8,
   },
   fuelDetails: {
     flexDirection: 'row',
@@ -371,46 +509,65 @@ const styles = StyleSheet.create({
   },
   deleteButton: {
     backgroundColor: '#ef4444',
-    flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
-    paddingHorizontal: 12,
-    paddingVertical: 8,
+    padding: 8,
     borderRadius: 8,
-    gap: 6,
+    width: 32,
+    height: 32,
   },
-  deleteButtonText: {
-    color: 'white',
-    fontSize: 14,
-    fontWeight: '500',
+
+  // Modal Styles
+  modalOverlay: {
+    flex: 1,
+    backgroundColor: 'rgba(0, 0, 0, 0.5)',
+    justifyContent: 'flex-end',
   },
-  formCard: {
+  modalContent: {
     backgroundColor: 'white',
-    borderRadius: 18,
-    padding: 16,
-    marginBottom: 16,
-    borderWidth: 1,
-    borderColor: '#e5e7eb',
+    borderTopLeftRadius: 24,
+    borderTopRightRadius: 24,
+    minHeight: '60%',
+    maxHeight: '90%',
   },
-  formTitle: {
+  modalHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    padding: 20,
+    borderBottomWidth: 1,
+    borderBottomColor: '#e5e7eb',
+  },
+  modalTitle: {
     fontSize: 20,
     fontWeight: 'bold',
-    marginBottom: 16,
     color: '#1f2937',
+  },
+  closeButton: {
+    padding: 4,
+  },
+  modalScrollView: {
+    padding: 20,
   },
   input: {
     borderWidth: 1,
     borderColor: '#d1d5db',
     borderRadius: 12,
     padding: 12,
-    marginBottom: 12,
+    marginBottom: 16,
     fontSize: 16,
     backgroundColor: '#f9fafb',
+  },
+  fuelTypeLabel: {
+    fontSize: 16,
+    fontWeight: '600',
+    color: '#374151',
+    marginBottom: 12,
   },
   fuelTypeButtons: {
     flexDirection: 'row',
     gap: 8,
-    marginBottom: 16,
+    marginBottom: 24,
   },
   fuelTypeButton: {
     flex: 1,
@@ -433,14 +590,17 @@ const styles = StyleSheet.create({
   fuelTypeButtonTextActive: {
     color: 'white',
   },
-  formButtons: {
+  modalButtons: {
     flexDirection: 'row',
-    gap: 8,
+    gap: 12,
+    padding: 20,
+    borderTopWidth: 1,
+    borderTopColor: '#e5e7eb',
   },
   addButton: {
     flex: 1,
     backgroundColor: '#059669',
-    paddingVertical: 12,
+    paddingVertical: 16,
     borderRadius: 12,
   },
   addButtonText: {
@@ -452,7 +612,7 @@ const styles = StyleSheet.create({
   cancelButton: {
     flex: 1,
     backgroundColor: '#f3f4f6',
-    paddingVertical: 12,
+    paddingVertical: 16,
     borderRadius: 12,
     borderWidth: 1,
     borderColor: '#e5e7eb',
@@ -462,21 +622,5 @@ const styles = StyleSheet.create({
     textAlign: 'center',
     fontWeight: '600',
     fontSize: 16,
-  },
-  addNewButton: {
-    backgroundColor: '#059669',
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-    paddingVertical: 16,
-    borderRadius: 18,
-    marginBottom: 16,
-    gap: 8,
-  },
-  addNewButtonText: {
-    color: 'white',
-    textAlign: 'center',
-    fontWeight: '600',
-    fontSize: 18,
   },
 });
