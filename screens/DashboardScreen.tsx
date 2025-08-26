@@ -26,16 +26,16 @@ export default function DashboardScreen({ navigation }: any) {
 
   const quickActions = [
     { title: 'Cars', icon: 'car' as const, onPress: () => navigation.navigate('Cars') },
-    { title: 'Reminders', icon: 'notifications' as const, onPress: () => navigation.navigate('Reminders') },
+    { title: 'Logs', icon: 'document-text' as const, onPress: () => navigation.navigate('Logs') },
     { title: 'Trips', icon: 'map' as const, onPress: () => navigation.navigate('Trips') },
     { title: 'Scanner', icon: 'scan' as const, onPress: () => navigation.navigate('Scanner') },
   ];
 
   const recentActivity = [
-    { type: 'trip', title: 'Home → Work', time: '2 hours ago', icon: 'car' as const },
-    { type: 'fuel', title: 'Fuel refill - $45.20', time: '1 day ago', icon: 'water' as const },
-    { type: 'maintenance', title: 'Oil change completed', time: '3 days ago', icon: 'construct' as const },
-    { type: 'trip', title: 'Grocery store run', time: '1 week ago', icon: 'car' as const },
+    { type: 'trip', title: 'Home → Work', time: '2 hours ago', icon: 'car' as const, color: '#3b82f6' },
+    { type: 'fuel', title: 'Fuel refill - Rs.345.20', time: '1 day ago', icon: 'water' as const, color: '#f59e0b' },
+    { type: 'maintenance', title: 'Oil change completed', time: '3 days ago', icon: 'construct' as const, color: '#8b5cf6' },
+    { type: 'trip', title: 'Grocery store run', time: '1 week ago', icon: 'car' as const, color: '#3b82f6' },
   ];
 
 
@@ -124,33 +124,25 @@ export default function DashboardScreen({ navigation }: any) {
               </View>
           </View>
 
-          {/* Performance Metrics */}
-          <View style={styles.section}>
-            <Text style={styles.sectionTitle}>Performance</Text>
-            <View style={styles.performanceCard}>
-              <View style={styles.performanceItem}>
-                <Text style={styles.performanceLabel}>Average MPG</Text>
-                <Text style={styles.performanceValue}>{stats.averageMPG}</Text>
-              </View>
-              <View style={styles.performanceItem}>
-                <Text style={styles.performanceLabel}>This Month Trips</Text>
-                <Text style={styles.performanceValue}>{stats.thisMonthTrips}</Text>
-              </View>
-            </View>
-          </View>
+
 
           {/* Recent Activity */}
           <View style={styles.section}>
-            <Text style={styles.sectionTitle}>Recent Activity</Text>
-                         {recentActivity.map((activity, index) => (
-               <View key={index} style={styles.activityItem}>
-                 <Ionicons name={activity.icon} size={20} color="#6b7280" style={styles.activityIcon} />
-                 <View style={styles.activityContent}>
-                   <Text style={styles.activityTitle}>{activity.title}</Text>
-                   <Text style={styles.activityTime}>{activity.time}</Text>
-                 </View>
-               </View>
-             ))}
+            <View style={styles.sectionHeader}>
+              <Text style={styles.sectionTitle}>Recent Activity</Text>
+              <TouchableOpacity>
+                <Text style={styles.viewAllText}>View all</Text>
+              </TouchableOpacity>
+            </View>
+            {recentActivity.slice(0, 2).map((activity, index) => (
+              <View key={index} style={styles.activityItem}>
+                <Ionicons name={activity.icon} size={20} color={activity.color} style={styles.activityIcon} />
+                <View style={styles.activityContent}>
+                  <Text style={styles.activityTitle}>{activity.title}</Text>
+                  <Text style={styles.activityTime}>{activity.time}</Text>
+                </View>
+              </View>
+            ))}
           </View>
         </ScrollView>
     </View>
@@ -380,26 +372,7 @@ const styles = StyleSheet.create({
     fontSize: 12,
     fontWeight: 'bold',
   },
-  performanceCard: {
-    backgroundColor: 'white',
-    borderRadius: 12,
-    padding: 20,
-  },
-  performanceItem: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    paddingVertical: 8,
-  },
-  performanceLabel: {
-    fontSize: 16,
-    color: '#6b7280',
-  },
-  performanceValue: {
-    fontSize: 18,
-    fontWeight: 'bold',
-    color: '#1f2937',
-  },
+
   activityItem: {
     flexDirection: 'row',
     alignItems: 'center',
