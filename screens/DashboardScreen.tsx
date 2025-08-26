@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { View, Text, TouchableOpacity, ScrollView, StyleSheet, Dimensions } from 'react-native';
+import { Ionicons, MaterialIcons, FontAwesome5 } from '@expo/vector-icons';
 
 const { width } = Dimensions.get('window');
 
@@ -25,17 +26,17 @@ export default function DashboardScreen({ navigation }: any) {
   };
 
   const quickActions = [
-    { title: 'Add Trip', icon: '🚗', color: '#3b82f6', onPress: () => navigation.navigate('Trips') },
-    { title: 'Add Fuel', icon: '⛽', color: '#10b981', onPress: () => navigation.navigate('Fuel') },
-    { title: 'Maintenance', icon: '🔧', color: '#f59e0b', onPress: () => navigation.navigate('Maintenance') },
-    { title: 'OBD Live', icon: '📊', color: '#8b5cf6', onPress: () => navigation.navigate('OBDLive') },
+    { title: 'Add Trip', icon: 'car' as const, color: '#3b82f6', onPress: () => navigation.navigate('Trips') },
+    { title: 'Add Fuel', icon: 'water' as const, color: '#10b981', onPress: () => navigation.navigate('Fuel') },
+    { title: 'Maintenance', icon: 'construct' as const, color: '#f59e0b', onPress: () => navigation.navigate('Maintenance') },
+    { title: 'OBD Live', icon: 'analytics' as const, color: '#8b5cf6', onPress: () => navigation.navigate('OBDLive') },
   ];
 
   const recentActivity = [
-    { type: 'trip', title: 'Home → Work', time: '2 hours ago', icon: '🚗' },
-    { type: 'fuel', title: 'Fuel refill - $45.20', time: '1 day ago', icon: '⛽' },
-    { type: 'maintenance', title: 'Oil change completed', time: '3 days ago', icon: '🔧' },
-    { type: 'trip', title: 'Grocery store run', time: '1 week ago', icon: '🚗' },
+    { type: 'trip', title: 'Home → Work', time: '2 hours ago', icon: 'car' as const },
+    { type: 'fuel', title: 'Fuel refill - $45.20', time: '1 day ago', icon: 'water' as const },
+    { type: 'maintenance', title: 'Oil change completed', time: '3 days ago', icon: 'construct' as const },
+    { type: 'trip', title: 'Grocery store run', time: '1 week ago', icon: 'car' as const },
   ];
 
   const Sidebar = () => (
@@ -53,7 +54,7 @@ export default function DashboardScreen({ navigation }: any) {
             navigation.navigate('Cars');
           }}
         >
-          <Text style={styles.sidebarIcon}>🚗</Text>
+          <Ionicons name="car" size={20} color="white" style={styles.sidebarIcon} />
           <Text style={styles.sidebarText}>My Cars</Text>
         </TouchableOpacity>
         
@@ -64,7 +65,7 @@ export default function DashboardScreen({ navigation }: any) {
             navigation.navigate('Trips');
           }}
         >
-          <Text style={styles.sidebarIcon}>🗺️</Text>
+          <Ionicons name="map" size={20} color="white" style={styles.sidebarIcon} />
           <Text style={styles.sidebarText}>Trips</Text>
         </TouchableOpacity>
         
@@ -75,7 +76,7 @@ export default function DashboardScreen({ navigation }: any) {
             navigation.navigate('Fuel');
           }}
         >
-          <Text style={styles.sidebarIcon}>⛽</Text>
+          <Ionicons name="water" size={20} color="white" style={styles.sidebarIcon} />
           <Text style={styles.sidebarText}>Fuel Tracker</Text>
         </TouchableOpacity>
         
@@ -86,7 +87,7 @@ export default function DashboardScreen({ navigation }: any) {
             navigation.navigate('Maintenance');
           }}
         >
-          <Text style={styles.sidebarIcon}>🔧</Text>
+          <Ionicons name="construct" size={20} color="white" style={styles.sidebarIcon} />
           <Text style={styles.sidebarText}>Maintenance</Text>
         </TouchableOpacity>
         
@@ -97,7 +98,7 @@ export default function DashboardScreen({ navigation }: any) {
             navigation.navigate('OBDLive');
           }}
         >
-          <Text style={styles.sidebarIcon}>📊</Text>
+          <Ionicons name="analytics" size={20} color="white" style={styles.sidebarIcon} />
           <Text style={styles.sidebarText}>OBD Live</Text>
         </TouchableOpacity>
       </ScrollView>
@@ -143,22 +144,22 @@ export default function DashboardScreen({ navigation }: any) {
           {/* Stats Cards */}
           <View style={styles.statsGrid}>
             <View style={styles.statCard}>
-              <Text style={styles.statIcon}>🚗</Text>
+              <Ionicons name="car" size={24} color="#3b82f6" style={styles.statIcon} />
               <Text style={styles.statValue}>{stats.totalCars}</Text>
               <Text style={styles.statLabel}>Cars</Text>
             </View>
             <View style={styles.statCard}>
-              <Text style={styles.statIcon}>🗺️</Text>
+              <Ionicons name="map" size={24} color="#10b981" style={styles.statIcon} />
               <Text style={styles.statValue}>{stats.totalTrips}</Text>
               <Text style={styles.statLabel}>Trips</Text>
             </View>
             <View style={styles.statCard}>
-              <Text style={styles.statIcon}>⛽</Text>
+              <Ionicons name="water" size={24} color="#f59e0b" style={styles.statIcon} />
               <Text style={styles.statValue}>${stats.totalFuelCost}</Text>
               <Text style={styles.statLabel}>Fuel Cost</Text>
             </View>
             <View style={styles.statCard}>
-              <Text style={styles.statIcon}>🔧</Text>
+              <Ionicons name="construct" size={24} color="#8b5cf6" style={styles.statIcon} />
               <Text style={styles.statValue}>${stats.totalMaintenanceCost}</Text>
               <Text style={styles.statLabel}>Maintenance</Text>
             </View>
@@ -168,16 +169,16 @@ export default function DashboardScreen({ navigation }: any) {
           <View style={styles.section}>
             <Text style={styles.sectionTitle}>Quick Actions</Text>
             <View style={styles.quickActionsGrid}>
-              {quickActions.map((action, index) => (
-                <TouchableOpacity
-                  key={index}
-                  style={[styles.quickActionCard, { backgroundColor: action.color }]}
-                  onPress={action.onPress}
-                >
-                  <Text style={styles.quickActionIcon}>{action.icon}</Text>
-                  <Text style={styles.quickActionText}>{action.title}</Text>
-                </TouchableOpacity>
-              ))}
+                             {quickActions.map((action, index) => (
+                 <TouchableOpacity
+                   key={index}
+                   style={[styles.quickActionCard, { backgroundColor: action.color }]}
+                   onPress={action.onPress}
+                 >
+                   <Ionicons name={action.icon} size={32} color="white" style={styles.quickActionIcon} />
+                   <Text style={styles.quickActionText}>{action.title}</Text>
+                 </TouchableOpacity>
+               ))}
             </View>
           </View>
 
@@ -199,15 +200,15 @@ export default function DashboardScreen({ navigation }: any) {
           {/* Recent Activity */}
           <View style={styles.section}>
             <Text style={styles.sectionTitle}>Recent Activity</Text>
-            {recentActivity.map((activity, index) => (
-              <View key={index} style={styles.activityItem}>
-                <Text style={styles.activityIcon}>{activity.icon}</Text>
-                <View style={styles.activityContent}>
-                  <Text style={styles.activityTitle}>{activity.title}</Text>
-                  <Text style={styles.activityTime}>{activity.time}</Text>
-                </View>
-              </View>
-            ))}
+                         {recentActivity.map((activity, index) => (
+               <View key={index} style={styles.activityItem}>
+                 <Ionicons name={activity.icon} size={20} color="#6b7280" style={styles.activityIcon} />
+                 <View style={styles.activityContent}>
+                   <Text style={styles.activityTitle}>{activity.title}</Text>
+                   <Text style={styles.activityTime}>{activity.time}</Text>
+                 </View>
+               </View>
+             ))}
           </View>
         </ScrollView>
       </View>
