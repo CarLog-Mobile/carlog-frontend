@@ -73,6 +73,34 @@ export default function DashboardScreen({ navigation }: any) {
             </View>
           </View>
 
+          {/* Currently Selected Vehicle */}
+          <View style={styles.vehicleSection}>
+            <View style={styles.vehicleHeader}>
+              <Text style={styles.vehicleHeaderTitle}>Currently Selected</Text>
+              <TouchableOpacity>
+                <Text style={styles.changeVehicleText}>Change vehicle</Text>
+              </TouchableOpacity>
+            </View>
+            <View style={styles.vehicleCard}>
+              <View style={styles.vehicleContent}>
+                <View style={styles.vehicleInfo}>
+                  <Text style={styles.vehicleName}>Toyota Camry</Text>
+                  <Text style={styles.vehicleYear}>2022</Text>
+                  <Text style={styles.vehiclePlate}>ABC-1234</Text>
+                  <TouchableOpacity style={styles.detailsButton}>
+                    <Ionicons name="eye-outline" size={16} color="#1f2937" />
+                    <Text style={styles.detailsButtonText}>Details</Text>
+                  </TouchableOpacity>
+                </View>
+                <View style={styles.vehicleImage}>
+                  <View style={styles.imagePlaceholder}>
+                    <Ionicons name="car" size={40} color="#9ca3af" />
+                  </View>
+                </View>
+              </View>
+            </View>
+          </View>
+
           {/* Quick Actions */}
           <View style={styles.section}>
             <Text style={styles.sectionTitle}>Quick Actions</Text>
@@ -204,6 +232,88 @@ const styles = StyleSheet.create({
     fontSize: 14,
     color: '#6b7280',
     fontWeight: '500',
+  },
+  vehicleSection: {
+    marginBottom: 24,
+  },
+  vehicleCard: {
+    backgroundColor: 'white',
+    borderRadius: 12,
+    padding: 16,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 3.84,
+    elevation: 5,
+  },
+  vehicleHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: 12,
+  },
+  vehicleHeaderTitle: {
+    fontSize: 20,
+    fontWeight: 'bold',
+    color: '#1f2937',
+  },
+  changeVehicleText: {
+    fontSize: 16,
+    color: '#3b82f6',
+    fontWeight: '500',
+  },
+  vehicleContent: {
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+  vehicleInfo: {
+    flex: 1,
+  },
+  vehicleName: {
+    fontSize: 20,
+    fontWeight: 'bold',
+    color: '#1f2937',
+    marginBottom: 4,
+  },
+  vehicleYear: {
+    fontSize: 16,
+    color: '#1f2937',
+    marginBottom: 4,
+  },
+  vehiclePlate: {
+    fontSize: 16,
+    color: '#1f2937',
+    marginBottom: 12,
+  },
+  detailsButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: '#f3f4f6',
+    borderRadius: 8,
+    paddingHorizontal: 12,
+    paddingVertical: 6,
+    alignSelf: 'flex-start',
+    gap: 6,
+  },
+  detailsButtonText: {
+    fontSize: 14,
+    color: '#1f2937',
+    fontWeight: '500',
+  },
+  vehicleImage: {
+    width: 80,
+    height: 60,
+    marginLeft: 16,
+  },
+  imagePlaceholder: {
+    width: '100%',
+    height: '100%',
+    backgroundColor: '#f9fafb',
+    borderRadius: 8,
+    alignItems: 'center',
+    justifyContent: 'center',
+    borderWidth: 1,
+    borderColor: '#e5e7eb',
   },
   section: {
     marginBottom: 24,
