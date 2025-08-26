@@ -223,7 +223,6 @@ export default function FuelScreen({ navigation, route }: any) {
               <View style={styles.fuelInfo}>
                 <View style={styles.fuelHeader}>
                   <Text style={styles.fuelDate}>{entry.date}</Text>
-                  <Text style={styles.fuelTotalCost}>LKR {entry.totalCost.toFixed(2)}</Text>
                 </View>
                 <View style={styles.fuelDetails}>
                   <View style={styles.fuelDetail}>
@@ -233,6 +232,10 @@ export default function FuelScreen({ navigation, route }: any) {
                   <View style={styles.fuelDetail}>
                     <Ionicons name="card" size={14} color="#9ca3af" />
                     <Text style={styles.fuelDetailText}>LKR {entry.costPerLiter}/L</Text>
+                  </View>
+                  <View style={styles.fuelDetail}>
+                    <Ionicons name="cash" size={14} color="#9ca3af" />
+                    <Text style={styles.fuelDetailText}>LKR {entry.totalCost.toFixed(2)}</Text>
                   </View>
                   <View style={styles.fuelDetail}>
                     <Ionicons name="speedometer" size={14} color="#9ca3af" />
@@ -491,13 +494,15 @@ const styles = StyleSheet.create({
   },
   fuelDetails: {
     flexDirection: 'row',
-    gap: 16,
+    flexWrap: 'wrap',
+    gap: 12,
     marginBottom: 8,
   },
   fuelDetail: {
     flexDirection: 'row',
     alignItems: 'center',
     gap: 4,
+    minWidth: '45%',
   },
   fuelDetailText: {
     color: '#9ca3af',
