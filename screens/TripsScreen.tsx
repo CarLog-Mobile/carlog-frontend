@@ -1,6 +1,7 @@
-import React, { useState } from 'react';
-import { View, Text, TouchableOpacity, ScrollView, TextInput, Alert, StyleSheet, Dimensions, Modal } from 'react-native';
+import React, { useState, useEffect } from 'react';
+import { View, Text, TouchableOpacity, ScrollView, TextInput, Alert, StyleSheet, Dimensions, Modal, ActivityIndicator } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
+import { tripsApi } from '../services/api';
 
 const { width } = Dimensions.get('window');
 
@@ -15,28 +16,11 @@ interface Trip {
 }
 
 export default function TripsScreen({ navigation, route }: any) {
-  const [trips, setTrips] = useState<Trip[]>([
-    {
-      id: '1',
-      carId: '1',
-      date: '2024-01-15',
-      startLocation: 'Home',
-      endLocation: 'Work',
-      distance: 12.5,
-      duration: 25
-    },
-    {
-      id: '2',
-      carId: '1',
-      date: '2024-01-14',
-      startLocation: 'Work',
-      endLocation: 'Grocery Store',
-      distance: 8.2,
-      duration: 18
-    }
-  ]);
-
+  const [trips, setTrips] = useState<Trip[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
   const [showAddModal, setShowAddModal] = useState(false);
+  const [addingTrip, setAddingTrip] = useState(false);
   const [newTrip, setNewTrip] = useState({
     startLocation: '',
     endLocation: '',
@@ -44,34 +28,73 @@ export default function TripsScreen({ navigation, route }: any) {
     duration: ''
   });
 
-  const addTrip = () => {
+  // Load trips from API when component mounts
+  useEffect(() => {
+    loadTrips();
+  }, []);
+
+  const loadTrips = async () => {
+    try {
+      setLoading(true);
+      setError(null);
+      const data = await tripsApi.getAll(route.params?.carId);
+      setTrips(data);
+    } catch (err) {
+      setError('Couldn\'t fetch');
+      console.error('Error loading trips:', err);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const addTrip = async () => {
     if (!newTrip.startLocation || !newTrip.endLocation || !newTrip.distance) {
       Alert.alert('Error', 'Please fill in all required fields');
       return;
     }
 
-    const trip: Trip = {
-      id: Date.now().toString(),
-      carId: route.params?.carId || '1',
-      date: new Date().toISOString().split('T')[0],
-      startLocation: newTrip.startLocation,
-      endLocation: newTrip.endLocation,
-      distance: parseFloat(newTrip.distance) || 0,
-      duration: parseFloat(newTrip.duration) || 0
-    };
+    try {
+      setAddingTrip(true);
+      const tripData = {
+        carId: route.params?.carId || '1',
+        date: new Date().toISOString().split('T')[0],
+        startLocation: newTrip.startLocation,
+        endLocation: newTrip.endLocation,
+        distance: parseFloat(newTrip.distance) || 0,
+        duration: parseFloat(newTrip.duration) || 0
+      };
 
-    setTrips([trip, ...trips]);
-    setNewTrip({ startLocation: '', endLocation: '', distance: '', duration: '' });
-    setShowAddModal(false);
+      const newTripResponse = await tripsApi.create(tripData);
+      setTrips([newTripResponse, ...trips]);
+      setNewTrip({ startLocation: '', endLocation: '', distance: '', duration: '' });
+      setShowAddModal(false);
+    } catch (err) {
+      Alert.alert('Error', 'Couldn\'t fetch');
+      console.error('Error adding trip:', err);
+    } finally {
+      setAddingTrip(false);
+    }
   };
 
-  const deleteTrip = (id: string) => {
+  const deleteTrip = async (id: string) => {
     Alert.alert(
       'Delete Trip',
       'Are you sure you want to delete this trip?',
       [
         { text: 'Cancel', style: 'cancel' },
-        { text: 'Delete', style: 'destructive', onPress: () => setTrips(trips.filter(trip => trip.id !== id)) }
+        { 
+          text: 'Delete', 
+          style: 'destructive', 
+          onPress: async () => {
+            try {
+              await tripsApi.delete(id);
+              setTrips(trips.filter(trip => trip.id !== id));
+            } catch (err) {
+              Alert.alert('Error', 'Couldn\'t fetch');
+              console.error('Error deleting trip:', err);
+            }
+          }
+        }
       ]
     );
   };
@@ -108,6 +131,51 @@ export default function TripsScreen({ navigation, route }: any) {
 
   const tripStats = calculateTripStats();
   const monthlyDistance = calculateMonthlyDistance();
+
+  // Show loading state
+  if (loading) {
+    return (
+      <View style={styles.container}>
+        <View style={styles.header}>
+          <View style={styles.headerContent}>
+            <Text style={styles.headerTitle}>Trip Logs</Text>
+          </View>
+        </View>
+        <View style={styles.loadingContainer}>
+          <ActivityIndicator size="large" color="#059669" />
+          <Text style={styles.loadingText}>Loading trips...</Text>
+        </View>
+      </View>
+    );
+  }
+
+  // Show error state
+  if (error) {
+    return (
+      <View style={styles.container}>
+        <View style={styles.header}>
+          <View style={styles.headerContent}>
+            <Text style={styles.headerTitle}>Trip Logs</Text>
+          </View>
+          <View style={styles.headerActions}>
+            <TouchableOpacity style={styles.iconButton} onPress={() => navigation.goBack()}>
+              <Ionicons name="arrow-back" size={20} color="#1f2937" />
+            </TouchableOpacity>
+            <TouchableOpacity style={styles.iconButton} onPress={loadTrips}>
+              <Ionicons name="refresh" size={20} color="#1f2937" />
+            </TouchableOpacity>
+          </View>
+        </View>
+        <View style={styles.errorContainer}>
+          <Ionicons name="alert-circle" size={48} color="#ef4444" />
+          <Text style={styles.errorText}>{error}</Text>
+          <TouchableOpacity style={styles.retryButton} onPress={loadTrips}>
+            <Text style={styles.retryButtonText}>Retry</Text>
+          </TouchableOpacity>
+        </View>
+      </View>
+    );
+  }
 
   return (
     <View style={styles.container}>
@@ -190,23 +258,33 @@ export default function TripsScreen({ navigation, route }: any) {
         </View>
 
         {/* Trip Entries */}
-        {trips.map((trip) => (
-          <TouchableOpacity
-            key={trip.id}
-            style={styles.tripCard}
-            onPress={() => navigation.navigate('Fuel', { tripId: trip.id })}
-          >
-            <View style={styles.tripCardContent}>
-              <View style={styles.tripInfo}>
-                <View style={styles.tripHeader}>
-                  <Text style={styles.tripDate}>{trip.date}</Text>
-                </View>
-                <View style={styles.tripRoute}>
-                  <Text style={styles.tripLocation}>{trip.startLocation}</Text>
-                  <Ionicons name="arrow-forward" size={16} color="#9ca3af" style={styles.tripArrow} />
-                  <Text style={styles.tripLocation}>{trip.endLocation}</Text>
-                </View>
-                                  <View style={styles.tripDetails}>
+        {trips.length === 0 ? (
+          <View style={styles.emptyContainer}>
+            <Ionicons name="map-outline" size={64} color="#9ca3af" />
+            <Text style={styles.emptyText}>No trips yet</Text>
+            <Text style={styles.emptySubtext}>Add your first trip to get started</Text>
+            <TouchableOpacity style={styles.addFirstButton} onPress={() => setShowAddModal(true)}>
+              <Text style={styles.addFirstButtonText}>Add First Trip</Text>
+            </TouchableOpacity>
+          </View>
+        ) : (
+          trips.map((trip) => (
+            <TouchableOpacity
+              key={trip.id}
+              style={styles.tripCard}
+              onPress={() => navigation.navigate('Fuel', { tripId: trip.id })}
+            >
+              <View style={styles.tripCardContent}>
+                <View style={styles.tripInfo}>
+                  <View style={styles.tripHeader}>
+                    <Text style={styles.tripDate}>{trip.date}</Text>
+                  </View>
+                  <View style={styles.tripRoute}>
+                    <Text style={styles.tripLocation}>{trip.startLocation}</Text>
+                    <Ionicons name="arrow-forward" size={16} color="#9ca3af" style={styles.tripArrow} />
+                    <Text style={styles.tripLocation}>{trip.endLocation}</Text>
+                  </View>
+                  <View style={styles.tripDetails}>
                     <View style={styles.tripDetail}>
                       <Ionicons name="speedometer" size={14} color="#9ca3af" />
                       <Text style={styles.tripDetailText}>{trip.distance} km</Text>
@@ -216,16 +294,17 @@ export default function TripsScreen({ navigation, route }: any) {
                       <Text style={styles.tripDetailText}>{trip.duration} min</Text>
                     </View>
                   </View>
+                </View>
+                <TouchableOpacity
+                  onPress={() => deleteTrip(trip.id)}
+                  style={styles.deleteButton}
+                >
+                  <Ionicons name="trash-outline" size={14} color="white" />
+                </TouchableOpacity>
               </View>
-              <TouchableOpacity
-                onPress={() => deleteTrip(trip.id)}
-                style={styles.deleteButton}
-              >
-                <Ionicons name="trash-outline" size={14} color="white" />
-              </TouchableOpacity>
-            </View>
-          </TouchableOpacity>
-        ))}
+            </TouchableOpacity>
+          ))
+        )}
       </ScrollView>
 
       {/* Add Trip Modal */}
@@ -274,21 +353,26 @@ export default function TripsScreen({ navigation, route }: any) {
                 onChangeText={(text) => setNewTrip({...newTrip, duration: text})}
                 keyboardType="numeric"
               />
-
             </ScrollView>
 
             <View style={styles.modalButtons}>
               <TouchableOpacity
                 style={styles.cancelButton}
                 onPress={() => setShowAddModal(false)}
+                disabled={addingTrip}
               >
                 <Text style={styles.cancelButtonText}>Cancel</Text>
               </TouchableOpacity>
               <TouchableOpacity
-                style={styles.addButton}
+                style={[styles.addButton, addingTrip && styles.addButtonDisabled]}
                 onPress={addTrip}
+                disabled={addingTrip}
               >
-                <Text style={styles.addButtonText}>Add Entry</Text>
+                {addingTrip ? (
+                  <ActivityIndicator size="small" color="white" />
+                ) : (
+                  <Text style={styles.addButtonText}>Add Entry</Text>
+                )}
               </TouchableOpacity>
             </View>
           </View>
@@ -354,6 +438,74 @@ const styles = StyleSheet.create({
     flex: 1,
     paddingHorizontal: 16,
     paddingTop: 16,
+  },
+
+  // Loading and Error States
+  loadingContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    paddingHorizontal: 20,
+  },
+  loadingText: {
+    marginTop: 16,
+    fontSize: 16,
+    color: '#6b7280',
+  },
+  errorContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    paddingHorizontal: 20,
+  },
+  errorText: {
+    marginTop: 16,
+    fontSize: 16,
+    color: '#ef4444',
+    textAlign: 'center',
+    marginBottom: 24,
+  },
+  retryButton: {
+    backgroundColor: '#059669',
+    paddingHorizontal: 24,
+    paddingVertical: 12,
+    borderRadius: 8,
+  },
+  retryButtonText: {
+    color: 'white',
+    fontWeight: '600',
+    fontSize: 16,
+  },
+  emptyContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    paddingHorizontal: 20,
+    paddingVertical: 60,
+  },
+  emptyText: {
+    marginTop: 16,
+    fontSize: 20,
+    fontWeight: '600',
+    color: '#374151',
+  },
+  emptySubtext: {
+    marginTop: 8,
+    fontSize: 16,
+    color: '#6b7280',
+    textAlign: 'center',
+    marginBottom: 24,
+  },
+  addFirstButton: {
+    backgroundColor: '#059669',
+    paddingHorizontal: 24,
+    paddingVertical: 12,
+    borderRadius: 8,
+  },
+  addFirstButtonText: {
+    color: 'white',
+    fontWeight: '600',
+    fontSize: 16,
   },
 
   // Charts Section
@@ -555,6 +707,11 @@ const styles = StyleSheet.create({
     backgroundColor: '#059669',
     paddingVertical: 16,
     borderRadius: 12,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  addButtonDisabled: {
+    backgroundColor: '#9ca3af',
   },
   addButtonText: {
     color: 'white',
@@ -569,6 +726,8 @@ const styles = StyleSheet.create({
     borderRadius: 12,
     borderWidth: 1,
     borderColor: '#e5e7eb',
+    alignItems: 'center',
+    justifyContent: 'center',
   },
   cancelButtonText: {
     color: '#374151',
