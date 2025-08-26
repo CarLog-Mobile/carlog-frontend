@@ -121,7 +121,7 @@ export default function DashboardScreen({ navigation }: any) {
                           <Text style={styles.badgeText}>{action.badge}</Text>
                         </View>
                       )}
-                                             <Ionicons name={action.icon} size={36} color="#3b82f6" style={styles.quickActionIcon} />
+                                             <Ionicons name={action.icon} size={36} color="#1067f2" style={styles.quickActionIcon} />
                     </TouchableOpacity>
                     <Text style={styles.quickActionText}>{action.title}</Text>
                   </View>
@@ -182,8 +182,8 @@ const styles = StyleSheet.create({
   },
   headerTitle: {
     color: '#1f2937',
-    fontSize: 32,
-    fontWeight: 'bold',
+    fontSize: 30,
+    fontFamily: 'Poppins-SemiBold',
   },
   headerActions: {
     flexDirection: 'row',
@@ -202,7 +202,7 @@ const styles = StyleSheet.create({
     height: 36,
   },
   profileButton: {
-    backgroundColor: '#3b82f6',
+    backgroundColor: '#0656E0',
     borderRadius: 8,
     padding: 8,
     alignItems: 'center',
@@ -230,14 +230,14 @@ const styles = StyleSheet.create({
   },
   statValue: {
     fontSize: 28,
-    fontWeight: 'bold',
+    fontFamily: 'Coinbase-Sans-Medium',
     color: '#1f2937',
     marginTop: 4,
   },
   statLabel: {
     fontSize: 14,
     color: '#6b7280',
-    fontWeight: '500',
+    fontFamily: 'Coinbase-Sans-Medium',
   },
   vehicleSection: {
     marginBottom: 24,
@@ -260,7 +260,8 @@ const styles = StyleSheet.create({
   },
   changeVehicleText: {
     fontSize: 16,
-    color: '#3b82f6',
+    fontFamily: 'Coinbase-Sans-Medium',
+    color: '#0656E0',
     fontWeight: '500',
   },
   vehicleContent: {
@@ -332,8 +333,9 @@ const styles = StyleSheet.create({
   },
   viewAllText: {
     fontSize: 14,
-    color: '#3b82f6',
+    color: '#0656E0',
     fontWeight: '500',
+    fontFamily: 'Coinbase-Sans-Medium',
   },
   quickActionsGrid: {
     flexDirection: 'row',
@@ -361,6 +363,7 @@ const styles = StyleSheet.create({
   quickActionText: {
     color: '#1f2937',
     fontSize: 14,
+    fontFamily: 'Coinbase-Sans-Medium',
     fontWeight: '500',
     textAlign: 'center',
   },
