@@ -25,10 +25,10 @@ export default function DashboardScreen({ navigation }: any) {
   };
 
   const quickActions = [
-    { title: 'Garages', icon: 'construct' as const, badge: 2, onPress: () => navigation.navigate('Garages') },
-    { title: 'Forums', icon: 'chatbubbles' as const, onPress: () => navigation.navigate('Forums') },
-    { title: 'Parts', icon: 'settings' as const, onPress: () => navigation.navigate('Parts') },
-    { title: 'Trips', icon: 'document' as const, onPress: () => navigation.navigate('Trips') },
+    { title: 'Cars', icon: 'car' as const, onPress: () => navigation.navigate('Cars') },
+    { title: 'Reminders', icon: 'notifications' as const, onPress: () => navigation.navigate('Reminders') },
+    { title: 'Trips', icon: 'map' as const, onPress: () => navigation.navigate('Trips') },
+    { title: 'Scanner', icon: 'scan' as const, onPress: () => navigation.navigate('Scanner') },
   ];
 
   const recentActivity = [
@@ -116,12 +116,7 @@ export default function DashboardScreen({ navigation }: any) {
                       style={styles.quickActionCard}
                       onPress={action.onPress}
                     >
-                      {action.badge && (
-                        <View style={styles.badge}>
-                          <Text style={styles.badgeText}>{action.badge}</Text>
-                        </View>
-                      )}
-                                             <Ionicons name={action.icon} size={36} color="#1067f2" style={styles.quickActionIcon} />
+                      <Ionicons name={action.icon} size={36} color="#0656E0" style={styles.quickActionIcon} />
                     </TouchableOpacity>
                     <Text style={styles.quickActionText}>{action.title}</Text>
                   </View>
@@ -165,6 +160,8 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: '#F3F4F6',
+    paddingLeft: 5,
+    paddingRight: 5,
   },
 
   header: {
@@ -332,7 +329,7 @@ const styles = StyleSheet.create({
     color: '#1f2937',
   },
   viewAllText: {
-    fontSize: 14,
+    fontSize: 16,
     color: '#0656E0',
     fontWeight: '500',
     fontFamily: 'Coinbase-Sans-Medium',
