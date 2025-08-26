@@ -1,5 +1,8 @@
 import React, { useState } from 'react';
-import { View, Text, TouchableOpacity, ScrollView, TextInput, Alert, StyleSheet } from 'react-native';
+import { View, Text, TouchableOpacity, ScrollView, TextInput, Alert, StyleSheet, Dimensions } from 'react-native';
+import { Ionicons } from '@expo/vector-icons';
+
+const { width } = Dimensions.get('window');
 
 interface Trip {
   id: string;
@@ -89,20 +92,38 @@ export default function TripsScreen({ navigation, route }: any) {
 
   return (
     <View style={styles.container}>
+      {/* Header */}
+      <View style={styles.header}>
+        <View style={styles.headerContent}>
+          <Text style={styles.headerTitle}>Trip Logs</Text>
+        </View>
+        <View style={styles.headerActions}>
+          <TouchableOpacity style={styles.iconButton} onPress={() => navigation.goBack()}>
+            <Ionicons name="arrow-back" size={20} color="#1f2937" />
+          </TouchableOpacity>
+          <TouchableOpacity style={styles.iconButton}>
+            <Ionicons name="search" size={20} color="#1f2937" />
+          </TouchableOpacity>
+          <TouchableOpacity style={styles.iconButton}>
+            <Ionicons name="filter" size={20} color="#1f2937" />
+          </TouchableOpacity>
+        </View>
+      </View>
+
       <ScrollView style={styles.scrollView}>
-        {/* Summary Cards */}
-        <View style={styles.summaryCards}>
-          <View style={styles.summaryCard}>
-            <Text style={styles.summaryLabel}>Total Distance</Text>
-            <Text style={styles.summaryValue}>{totalDistance.toFixed(1)} mi</Text>
+        {/* Stats Cards */}
+        <View style={styles.statsRow}>
+          <View style={styles.statCard}>
+            <Text style={styles.statLabel}>Total Distance</Text>
+            <Text style={styles.statValue}>{totalDistance.toFixed(1)} mi</Text>
           </View>
-          <View style={styles.summaryCard}>
-            <Text style={styles.summaryLabel}>Total Cost</Text>
-            <Text style={styles.summaryValueCost}>${totalCost.toFixed(2)}</Text>
+          <View style={styles.statCard}>
+            <Text style={styles.statLabel}>Total Cost</Text>
+            <Text style={styles.statValue}>${totalCost.toFixed(2)}</Text>
           </View>
-          <View style={styles.summaryCard}>
-            <Text style={styles.summaryLabel}>Fuel Used</Text>
-            <Text style={styles.summaryValueFuel}>{totalFuel.toFixed(1)} gal</Text>
+          <View style={styles.statCard}>
+            <Text style={styles.statLabel}>Fuel Used</Text>
+            <Text style={styles.statValue}>{totalFuel.toFixed(1)} gal</Text>
           </View>
         </View>
 
@@ -117,20 +138,30 @@ export default function TripsScreen({ navigation, route }: any) {
               <View style={styles.tripInfo}>
                 <View style={styles.tripRoute}>
                   <Text style={styles.tripLocation}>{trip.startLocation}</Text>
-                  <Text style={styles.tripArrow}>→</Text>
+                  <Ionicons name="arrow-forward" size={16} color="#9ca3af" style={styles.tripArrow} />
                   <Text style={styles.tripLocation}>{trip.endLocation}</Text>
                 </View>
                 <Text style={styles.tripDate}>{trip.date}</Text>
                 <View style={styles.tripDetails}>
-                  <Text style={styles.tripDetail}>{trip.distance} mi</Text>
-                  <Text style={styles.tripDetail}>{trip.duration} min</Text>
-                  <Text style={styles.tripDetail}>${trip.cost}</Text>
+                  <View style={styles.tripDetail}>
+                    <Ionicons name="speedometer" size={14} color="#9ca3af" />
+                    <Text style={styles.tripDetailText}>{trip.distance} mi</Text>
+                  </View>
+                  <View style={styles.tripDetail}>
+                    <Ionicons name="time" size={14} color="#9ca3af" />
+                    <Text style={styles.tripDetailText}>{trip.duration} min</Text>
+                  </View>
+                  <View style={styles.tripDetail}>
+                    <Ionicons name="card" size={14} color="#9ca3af" />
+                    <Text style={styles.tripDetailText}>${trip.cost}</Text>
+                  </View>
                 </View>
               </View>
               <TouchableOpacity
                 onPress={() => deleteTrip(trip.id)}
                 style={styles.deleteButton}
               >
+                <Ionicons name="trash-outline" size={16} color="white" />
                 <Text style={styles.deleteButtonText}>Delete</Text>
               </TouchableOpacity>
             </View>
@@ -202,7 +233,8 @@ export default function TripsScreen({ navigation, route }: any) {
             style={styles.addNewButton}
             onPress={() => setShowAddForm(true)}
           >
-            <Text style={styles.addNewButtonText}>+ Add New Trip</Text>
+            <Ionicons name="add" size={24} color="white" />
+            <Text style={styles.addNewButtonText}>Add New Trip</Text>
           </TouchableOpacity>
         )}
       </ScrollView>
@@ -213,7 +245,44 @@ export default function TripsScreen({ navigation, route }: any) {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#f9fafb',
+    backgroundColor: '#F3F4F6',
+    paddingLeft: 5,
+    paddingRight: 5,
+  },
+
+  header: {
+    backgroundColor: 'transparent',
+    paddingTop: 48,
+    paddingBottom: 16,
+    paddingHorizontal: 16,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+  },
+
+  headerContent: {
+    flex: 1,
+  },
+  headerTitle: {
+    color: '#1f2937',
+    fontSize: 30,
+    fontFamily: 'Poppins-SemiBold',
+  },
+  headerActions: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+  },
+  iconButton: {
+    backgroundColor: '#f3f4f6',
+    borderRadius: 8,
+    padding: 8,
+    borderWidth: 1,
+    borderColor: '#e5e7eb',
+    alignItems: 'center',
+    justifyContent: 'center',
+    width: 36,
+    height: 36,
   },
 
   scrollView: {
@@ -221,51 +290,35 @@ const styles = StyleSheet.create({
     paddingHorizontal: 16,
     paddingTop: 16,
   },
-  summaryCards: {
+  statsRow: {
     flexDirection: 'row',
-    gap: 12,
-    marginBottom: 16,
+    justifyContent: 'space-between',
+    marginBottom: 24,
+    gap: 8,
   },
-  summaryCard: {
-    flex: 1,
+  statCard: {
     backgroundColor: 'white',
-    borderRadius: 8,
-    padding: 12,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 1 },
-    shadowOpacity: 0.1,
-    shadowRadius: 2,
-    elevation: 2,
+    borderRadius: 18,
+    padding: 16,
+    flex: 1,
+    alignItems: 'flex-start',
   },
-  summaryLabel: {
+  statValue: {
+    fontSize: 28,
+    fontFamily: 'Coinbase-Sans-Medium',
+    color: '#1f2937',
+    marginTop: 4,
+  },
+  statLabel: {
+    fontSize: 14,
     color: '#6b7280',
-    fontSize: 12,
-  },
-  summaryValue: {
-    fontSize: 20,
-    fontWeight: 'bold',
-    color: '#2563eb',
-  },
-  summaryValueCost: {
-    fontSize: 20,
-    fontWeight: 'bold',
-    color: '#059669',
-  },
-  summaryValueFuel: {
-    fontSize: 20,
-    fontWeight: 'bold',
-    color: '#ea580c',
+    fontFamily: 'Coinbase-Sans-Medium',
   },
   tripCard: {
     backgroundColor: 'white',
-    borderRadius: 8,
+    borderRadius: 18,
     padding: 16,
     marginBottom: 12,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 1 },
-    shadowOpacity: 0.1,
-    shadowRadius: 2,
-    elevation: 2,
     borderWidth: 1,
     borderColor: '#e5e7eb',
   },
@@ -288,47 +341,51 @@ const styles = StyleSheet.create({
     color: '#1f2937',
   },
   tripArrow: {
-    color: '#9ca3af',
     marginHorizontal: 8,
   },
   tripDate: {
     color: '#6b7280',
     fontSize: 16,
+    marginBottom: 8,
   },
   tripDetails: {
     flexDirection: 'row',
     gap: 16,
-    marginTop: 8,
   },
   tripDetail: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
+  },
+  tripDetailText: {
     color: '#9ca3af',
     fontSize: 14,
   },
   deleteButton: {
     backgroundColor: '#ef4444',
-    paddingHorizontal: 8,
-    paddingVertical: 4,
-    borderRadius: 4,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingHorizontal: 12,
+    paddingVertical: 8,
+    borderRadius: 8,
+    gap: 6,
   },
   deleteButtonText: {
     color: 'white',
-    fontSize: 10,
+    fontSize: 14,
+    fontWeight: '500',
   },
   formCard: {
     backgroundColor: 'white',
-    borderRadius: 8,
+    borderRadius: 18,
     padding: 16,
     marginBottom: 16,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 1 },
-    shadowOpacity: 0.1,
-    shadowRadius: 2,
-    elevation: 2,
     borderWidth: 1,
     borderColor: '#e5e7eb',
   },
   formTitle: {
-    fontSize: 18,
+    fontSize: 20,
     fontWeight: 'bold',
     marginBottom: 16,
     color: '#1f2937',
@@ -336,10 +393,11 @@ const styles = StyleSheet.create({
   input: {
     borderWidth: 1,
     borderColor: '#d1d5db',
-    borderRadius: 4,
-    padding: 8,
+    borderRadius: 12,
+    padding: 12,
     marginBottom: 12,
     fontSize: 16,
+    backgroundColor: '#f9fafb',
   },
   formButtons: {
     flexDirection: 'row',
@@ -347,31 +405,39 @@ const styles = StyleSheet.create({
   },
   addButton: {
     flex: 1,
-    backgroundColor: '#2563eb',
-    paddingVertical: 8,
-    borderRadius: 4,
+    backgroundColor: '#0656E0',
+    paddingVertical: 12,
+    borderRadius: 12,
   },
   addButtonText: {
     color: 'white',
     textAlign: 'center',
     fontWeight: '600',
+    fontSize: 16,
   },
   cancelButton: {
     flex: 1,
-    backgroundColor: '#d1d5db',
-    paddingVertical: 8,
-    borderRadius: 4,
+    backgroundColor: '#f3f4f6',
+    paddingVertical: 12,
+    borderRadius: 12,
+    borderWidth: 1,
+    borderColor: '#e5e7eb',
   },
   cancelButtonText: {
     color: '#374151',
     textAlign: 'center',
     fontWeight: '600',
+    fontSize: 16,
   },
   addNewButton: {
-    backgroundColor: '#2563eb',
-    paddingVertical: 12,
-    borderRadius: 8,
+    backgroundColor: '#0656E0',
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingVertical: 16,
+    borderRadius: 18,
     marginBottom: 16,
+    gap: 8,
   },
   addNewButtonText: {
     color: 'white',

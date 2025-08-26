@@ -1,5 +1,8 @@
 import React, { useState } from 'react';
-import { View, Text, TouchableOpacity, ScrollView, TextInput, Alert, StyleSheet } from 'react-native';
+import { View, Text, TouchableOpacity, ScrollView, TextInput, Alert, StyleSheet, Dimensions } from 'react-native';
+import { Ionicons } from '@expo/vector-icons';
+
+const { width } = Dimensions.get('window');
 
 interface Car {
   id: string;
@@ -77,7 +80,38 @@ export default function CarsScreen({ navigation }: any) {
 
   return (
     <View style={styles.container}>
+      {/* Header */}
+      <View style={styles.header}>
+        <View style={styles.headerContent}>
+          <Text style={styles.headerTitle}>My Cars</Text>
+        </View>
+        <View style={styles.headerActions}>
+          <TouchableOpacity style={styles.iconButton} onPress={() => navigation.goBack()}>
+            <Ionicons name="arrow-back" size={20} color="#1f2937" />
+          </TouchableOpacity>
+          <TouchableOpacity style={styles.iconButton}>
+            <Ionicons name="search" size={20} color="#1f2937" />
+          </TouchableOpacity>
+          <TouchableOpacity style={styles.iconButton}>
+            <Ionicons name="filter" size={20} color="#1f2937" />
+          </TouchableOpacity>
+        </View>
+      </View>
+
       <ScrollView style={styles.scrollView}>
+        {/* Stats Cards */}
+        <View style={styles.statsRow}>
+          <View style={styles.statCard}>
+            <Text style={styles.statLabel}>Total Cars</Text>
+            <Text style={styles.statValue}>{cars.length}</Text>
+          </View>
+          <View style={styles.statCard}>
+            <Text style={styles.statLabel}>Total Mileage</Text>
+            <Text style={styles.statValue}>{cars.reduce((sum, car) => sum + car.mileage, 0).toLocaleString()}</Text>
+          </View>
+        </View>
+
+        {/* Cars List */}
         {cars.map((car) => (
           <TouchableOpacity
             key={car.id}
@@ -89,14 +123,24 @@ export default function CarsScreen({ navigation }: any) {
                 <Text style={styles.carTitle}>{car.make} {car.model}</Text>
                 <Text style={styles.carDetails}>{car.year} • {car.licensePlate}</Text>
                 <Text style={styles.carMileage}>{car.mileage.toLocaleString()} miles • {car.fuelType}</Text>
+                <TouchableOpacity style={styles.detailsButton}>
+                  <Ionicons name="eye-outline" size={16} color="#1f2937" />
+                  <Text style={styles.detailsButtonText}>View Details</Text>
+                </TouchableOpacity>
               </View>
-              <TouchableOpacity
-                onPress={() => deleteCar(car.id)}
-                style={styles.deleteButton}
-              >
-                <Text style={styles.deleteButtonText}>Delete</Text>
-              </TouchableOpacity>
+              <View style={styles.carImage}>
+                <View style={styles.imagePlaceholder}>
+                  <Ionicons name="car" size={40} color="#9ca3af" />
+                </View>
+              </View>
             </View>
+            <TouchableOpacity
+              onPress={() => deleteCar(car.id)}
+              style={styles.deleteButton}
+            >
+              <Ionicons name="trash-outline" size={16} color="white" />
+              <Text style={styles.deleteButtonText}>Delete</Text>
+            </TouchableOpacity>
           </TouchableOpacity>
         ))}
 
@@ -157,7 +201,8 @@ export default function CarsScreen({ navigation }: any) {
             style={styles.addNewButton}
             onPress={() => setShowAddForm(true)}
           >
-            <Text style={styles.addNewButtonText}>+ Add New Car</Text>
+            <Ionicons name="add" size={24} color="white" />
+            <Text style={styles.addNewButtonText}>Add New Car</Text>
           </TouchableOpacity>
         )}
       </ScrollView>
@@ -168,7 +213,44 @@ export default function CarsScreen({ navigation }: any) {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#f9fafb',
+    backgroundColor: '#F3F4F6',
+    paddingLeft: 5,
+    paddingRight: 5,
+  },
+
+  header: {
+    backgroundColor: 'transparent',
+    paddingTop: 48,
+    paddingBottom: 16,
+    paddingHorizontal: 16,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+  },
+
+  headerContent: {
+    flex: 1,
+  },
+  headerTitle: {
+    color: '#1f2937',
+    fontSize: 30,
+    fontFamily: 'Poppins-SemiBold',
+  },
+  headerActions: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+  },
+  iconButton: {
+    backgroundColor: '#f3f4f6',
+    borderRadius: 8,
+    padding: 8,
+    borderWidth: 1,
+    borderColor: '#e5e7eb',
+    alignItems: 'center',
+    justifyContent: 'center',
+    width: 36,
+    height: 36,
   },
 
   scrollView: {
@@ -176,23 +258,42 @@ const styles = StyleSheet.create({
     paddingHorizontal: 16,
     paddingTop: 16,
   },
+  statsRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    marginBottom: 24,
+    gap: 8,
+  },
+  statCard: {
+    backgroundColor: 'white',
+    borderRadius: 18,
+    padding: 16,
+    flex: 1,
+    alignItems: 'flex-start',
+  },
+  statValue: {
+    fontSize: 28,
+    fontFamily: 'Coinbase-Sans-Medium',
+    color: '#1f2937',
+    marginTop: 4,
+  },
+  statLabel: {
+    fontSize: 14,
+    color: '#6b7280',
+    fontFamily: 'Coinbase-Sans-Medium',
+  },
   carCard: {
     backgroundColor: 'white',
-    borderRadius: 8,
+    borderRadius: 18,
     padding: 16,
     marginBottom: 16,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 1 },
-    shadowOpacity: 0.1,
-    shadowRadius: 2,
-    elevation: 2,
     borderWidth: 1,
     borderColor: '#e5e7eb',
   },
   carCardContent: {
     flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'flex-start',
+    alignItems: 'center',
+    marginBottom: 12,
   },
   carInfo: {
     flex: 1,
@@ -201,41 +302,73 @@ const styles = StyleSheet.create({
     fontSize: 20,
     fontWeight: 'bold',
     color: '#1f2937',
+    marginBottom: 4,
   },
   carDetails: {
     fontSize: 16,
     color: '#6b7280',
+    marginBottom: 4,
   },
   carMileage: {
     fontSize: 14,
     color: '#9ca3af',
-    marginTop: 4,
+    marginBottom: 12,
+  },
+  detailsButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: '#f3f4f6',
+    borderRadius: 8,
+    paddingHorizontal: 12,
+    paddingVertical: 6,
+    alignSelf: 'flex-start',
+    gap: 6,
+  },
+  detailsButtonText: {
+    fontSize: 14,
+    color: '#1f2937',
+    fontWeight: '500',
+  },
+  carImage: {
+    width: 80,
+    height: 60,
+    marginLeft: 16,
+  },
+  imagePlaceholder: {
+    width: '100%',
+    height: '100%',
+    backgroundColor: '#f9fafb',
+    borderRadius: 8,
+    alignItems: 'center',
+    justifyContent: 'center',
+    borderWidth: 1,
+    borderColor: '#e5e7eb',
   },
   deleteButton: {
     backgroundColor: '#ef4444',
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
     paddingHorizontal: 12,
-    paddingVertical: 4,
-    borderRadius: 4,
+    paddingVertical: 8,
+    borderRadius: 8,
+    gap: 6,
   },
   deleteButtonText: {
     color: 'white',
-    fontSize: 12,
+    fontSize: 14,
+    fontWeight: '500',
   },
   formCard: {
     backgroundColor: 'white',
-    borderRadius: 8,
+    borderRadius: 18,
     padding: 16,
     marginBottom: 16,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 1 },
-    shadowOpacity: 0.1,
-    shadowRadius: 2,
-    elevation: 2,
     borderWidth: 1,
     borderColor: '#e5e7eb',
   },
   formTitle: {
-    fontSize: 18,
+    fontSize: 20,
     fontWeight: 'bold',
     marginBottom: 16,
     color: '#1f2937',
@@ -243,10 +376,11 @@ const styles = StyleSheet.create({
   input: {
     borderWidth: 1,
     borderColor: '#d1d5db',
-    borderRadius: 4,
-    padding: 8,
+    borderRadius: 12,
+    padding: 12,
     marginBottom: 12,
     fontSize: 16,
+    backgroundColor: '#f9fafb',
   },
   formButtons: {
     flexDirection: 'row',
@@ -254,31 +388,39 @@ const styles = StyleSheet.create({
   },
   addButton: {
     flex: 1,
-    backgroundColor: '#3b82f6',
-    paddingVertical: 8,
-    borderRadius: 4,
+    backgroundColor: '#0656E0',
+    paddingVertical: 12,
+    borderRadius: 12,
   },
   addButtonText: {
     color: 'white',
     textAlign: 'center',
     fontWeight: '600',
+    fontSize: 16,
   },
   cancelButton: {
     flex: 1,
-    backgroundColor: '#d1d5db',
-    paddingVertical: 8,
-    borderRadius: 4,
+    backgroundColor: '#f3f4f6',
+    paddingVertical: 12,
+    borderRadius: 12,
+    borderWidth: 1,
+    borderColor: '#e5e7eb',
   },
   cancelButtonText: {
     color: '#374151',
     textAlign: 'center',
     fontWeight: '600',
+    fontSize: 16,
   },
   addNewButton: {
-    backgroundColor: '#3b82f6',
-    paddingVertical: 12,
-    borderRadius: 8,
+    backgroundColor: '#0656E0',
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingVertical: 16,
+    borderRadius: 18,
     marginBottom: 16,
+    gap: 8,
   },
   addNewButtonText: {
     color: 'white',

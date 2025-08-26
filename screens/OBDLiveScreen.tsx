@@ -1,5 +1,8 @@
 import React, { useState, useEffect } from 'react';
-import { View, Text, TouchableOpacity, ScrollView, Alert } from 'react-native';
+import { View, Text, TouchableOpacity, ScrollView, Alert, StyleSheet, Dimensions } from 'react-native';
+import { Ionicons } from '@expo/vector-icons';
+
+const { width } = Dimensions.get('window');
 
 interface OBDData {
   engineRPM: number;
@@ -88,51 +91,72 @@ export default function OBDLiveScreen({ navigation, route }: any) {
   };
 
   const getStatusColor = (value: number, min: number, max: number) => {
-    if (value < min || value > max) return 'text-red-600';
-    if (value > max * 0.8 || value < min * 1.2) return 'text-yellow-600';
-    return 'text-green-600';
+    if (value < min || value > max) return '#ef4444';
+    if (value > max * 0.8 || value < min * 1.2) return '#f59e0b';
+    return '#059669';
   };
 
   const getGaugeColor = (value: number, min: number, max: number) => {
-    if (value < min || value > max) return 'bg-red-500';
-    if (value > max * 0.8 || value < min * 1.2) return 'bg-yellow-500';
-    return 'bg-green-500';
+    if (value < min || value > max) return '#ef4444';
+    if (value > max * 0.8 || value < min * 1.2) return '#f59e0b';
+    return '#059669';
   };
 
   return (
     <View style={styles.container}>
+      {/* Header */}
+      <View style={styles.header}>
+        <View style={styles.headerContent}>
+          <Text style={styles.headerTitle}>OBD Live Data</Text>
+        </View>
+        <View style={styles.headerActions}>
+          <TouchableOpacity style={styles.iconButton} onPress={() => navigation.goBack()}>
+            <Ionicons name="arrow-back" size={20} color="#1f2937" />
+          </TouchableOpacity>
+          <TouchableOpacity style={styles.iconButton}>
+            <Ionicons name="settings" size={20} color="#1f2937" />
+          </TouchableOpacity>
+          <TouchableOpacity style={styles.iconButton}>
+            <Ionicons name="help-circle" size={20} color="#1f2937" />
+          </TouchableOpacity>
+        </View>
+      </View>
+
       <ScrollView style={styles.scrollView}>
         {/* Connection Status */}
-        <View className="bg-white rounded-lg p-4 mb-4 shadow-sm border border-gray-200">
-          <View className="flex-row justify-between items-center mb-4">
-            <Text className="text-lg font-bold">Connection Status</Text>
-            <View className={`w-3 h-3 rounded-full ${isConnected ? 'bg-green-500' : 'bg-red-500'}`} />
+        <View style={styles.connectionCard}>
+          <View style={styles.connectionHeader}>
+            <Text style={styles.connectionTitle}>Connection Status</Text>
+            <View style={[styles.connectionIndicator, { backgroundColor: isConnected ? '#059669' : '#ef4444' }]} />
           </View>
-          <View className="flex-row gap-2">
+          <View style={styles.connectionButtons}>
             {!isConnected ? (
               <TouchableOpacity
-                className="flex-1 bg-green-500 py-2 rounded"
+                style={styles.connectButton}
                 onPress={connectOBD}
               >
-                <Text className="text-white text-center font-semibold">Connect OBD</Text>
+                <Ionicons name="bluetooth" size={16} color="white" />
+                <Text style={styles.connectButtonText}>Connect OBD</Text>
               </TouchableOpacity>
             ) : (
-              <>
+              <View style={styles.connectedButtons}>
                 <TouchableOpacity
-                  className="flex-1 bg-red-500 py-2 rounded"
+                  style={styles.disconnectButton}
                   onPress={disconnectOBD}
                 >
-                  <Text className="text-white text-center font-semibold">Disconnect</Text>
+                  <Ionicons name="close-circle" size={16} color="white" />
+                  <Text style={styles.disconnectButtonText}>Disconnect</Text>
                 </TouchableOpacity>
                 <TouchableOpacity
-                  className={`flex-1 py-2 rounded ${isRecording ? 'bg-red-500' : 'bg-blue-500'}`}
+                  style={[styles.recordButton, isRecording && styles.recordingButton]}
                   onPress={isRecording ? stopRecording : startRecording}
                 >
-                  <Text className="text-white text-center font-semibold">
+                  <Ionicons name={isRecording ? "stop" : "play"} size={16} color="white" />
+                  <Text style={styles.recordButtonText}>
                     {isRecording ? 'Stop Recording' : 'Start Recording'}
                   </Text>
                 </TouchableOpacity>
-              </>
+              </View>
             )}
           </View>
         </View>
@@ -140,30 +164,30 @@ export default function OBDLiveScreen({ navigation, route }: any) {
         {isConnected && (
           <>
             {/* Engine Data */}
-            <View className="bg-white rounded-lg p-4 mb-4 shadow-sm border border-gray-200">
-              <Text className="text-lg font-bold mb-4">Engine Data</Text>
-              <View className="space-y-3">
-                <View className="flex-row justify-between items-center">
-                  <Text className="text-gray-600">Engine RPM</Text>
-                  <Text className={`font-bold ${getStatusColor(obdData.engineRPM, 600, 3000)}`}>
+            <View style={styles.dataCard}>
+              <Text style={styles.dataCardTitle}>Engine Data</Text>
+              <View style={styles.dataGrid}>
+                <View style={styles.dataRow}>
+                  <Text style={styles.dataLabel}>Engine RPM</Text>
+                  <Text style={[styles.dataValue, { color: getStatusColor(obdData.engineRPM, 600, 3000) }]}>
                     {Math.round(obdData.engineRPM)} RPM
                   </Text>
                 </View>
-                <View className="flex-row justify-between items-center">
-                  <Text className="text-gray-600">Speed</Text>
-                  <Text className={`font-bold ${getStatusColor(obdData.speed, 0, 120)}`}>
+                <View style={styles.dataRow}>
+                  <Text style={styles.dataLabel}>Speed</Text>
+                  <Text style={[styles.dataValue, { color: getStatusColor(obdData.speed, 0, 120) }]}>
                     {Math.round(obdData.speed)} MPH
                   </Text>
                 </View>
-                <View className="flex-row justify-between items-center">
-                  <Text className="text-gray-600">Engine Load</Text>
-                  <Text className={`font-bold ${getStatusColor(obdData.engineLoad, 0, 100)}`}>
+                <View style={styles.dataRow}>
+                  <Text style={styles.dataLabel}>Engine Load</Text>
+                  <Text style={[styles.dataValue, { color: getStatusColor(obdData.engineLoad, 0, 100) }]}>
                     {Math.round(obdData.engineLoad)}%
                   </Text>
                 </View>
-                <View className="flex-row justify-between items-center">
-                  <Text className="text-gray-600">Throttle Position</Text>
-                  <Text className={`font-bold ${getStatusColor(obdData.throttlePosition, 0, 100)}`}>
+                <View style={styles.dataRow}>
+                  <Text style={styles.dataLabel}>Throttle Position</Text>
+                  <Text style={[styles.dataValue, { color: getStatusColor(obdData.throttlePosition, 0, 100) }]}>
                     {Math.round(obdData.throttlePosition)}%
                   </Text>
                 </View>
@@ -171,24 +195,24 @@ export default function OBDLiveScreen({ navigation, route }: any) {
             </View>
 
             {/* Temperature & Pressure */}
-            <View className="bg-white rounded-lg p-4 mb-4 shadow-sm border border-gray-200">
-              <Text className="text-lg font-bold mb-4">Temperature & Pressure</Text>
-              <View className="space-y-3">
-                <View className="flex-row justify-between items-center">
-                  <Text className="text-gray-600">Coolant Temp</Text>
-                  <Text className={`font-bold ${getStatusColor(obdData.coolantTemp, 160, 220)}`}>
+            <View style={styles.dataCard}>
+              <Text style={styles.dataCardTitle}>Temperature & Pressure</Text>
+              <View style={styles.dataGrid}>
+                <View style={styles.dataRow}>
+                  <Text style={styles.dataLabel}>Coolant Temp</Text>
+                  <Text style={[styles.dataValue, { color: getStatusColor(obdData.coolantTemp, 160, 220) }]}>
                     {Math.round(obdData.coolantTemp)}°F
                   </Text>
                 </View>
-                <View className="flex-row justify-between items-center">
-                  <Text className="text-gray-600">Intake Temp</Text>
-                  <Text className={`font-bold ${getStatusColor(obdData.intakeTemp, 70, 120)}`}>
+                <View style={styles.dataRow}>
+                  <Text style={styles.dataLabel}>Intake Temp</Text>
+                  <Text style={[styles.dataValue, { color: getStatusColor(obdData.intakeTemp, 70, 120) }]}>
                     {Math.round(obdData.intakeTemp)}°F
                   </Text>
                 </View>
-                <View className="flex-row justify-between items-center">
-                  <Text className="text-gray-600">Oil Pressure</Text>
-                  <Text className={`font-bold ${getStatusColor(obdData.oilPressure, 30, 60)}`}>
+                <View style={styles.dataRow}>
+                  <Text style={styles.dataLabel}>Oil Pressure</Text>
+                  <Text style={[styles.dataValue, { color: getStatusColor(obdData.oilPressure, 30, 60) }]}>
                     {Math.round(obdData.oilPressure)} PSI
                   </Text>
                 </View>
@@ -196,26 +220,28 @@ export default function OBDLiveScreen({ navigation, route }: any) {
             </View>
 
             {/* Fuel & Battery */}
-            <View className="bg-white rounded-lg p-4 mb-4 shadow-sm border border-gray-200">
-              <Text className="text-lg font-bold mb-4">Fuel & Battery</Text>
-              <View className="space-y-3">
-                <View className="flex-row justify-between items-center">
-                  <Text className="text-gray-600">Fuel Level</Text>
-                  <View className="flex-row items-center">
-                    <View className="w-20 bg-gray-200 rounded-full h-2 mr-2">
+            <View style={styles.dataCard}>
+              <Text style={styles.dataCardTitle}>Fuel & Battery</Text>
+              <View style={styles.dataGrid}>
+                <View style={styles.dataRow}>
+                  <Text style={styles.dataLabel}>Fuel Level</Text>
+                  <View style={styles.fuelGaugeContainer}>
+                    <View style={styles.fuelGauge}>
                       <View 
-                        className={`h-2 rounded-full ${getGaugeColor(obdData.fuelLevel, 10, 100)}`}
-                        style={{ width: `${obdData.fuelLevel}%` }}
+                        style={[styles.fuelGaugeFill, { 
+                          width: `${obdData.fuelLevel}%`,
+                          backgroundColor: getGaugeColor(obdData.fuelLevel, 10, 100)
+                        }]}
                       />
                     </View>
-                    <Text className={`font-bold ${getStatusColor(obdData.fuelLevel, 10, 100)}`}>
+                    <Text style={[styles.dataValue, { color: getStatusColor(obdData.fuelLevel, 10, 100) }]}>
                       {Math.round(obdData.fuelLevel)}%
                     </Text>
                   </View>
                 </View>
-                <View className="flex-row justify-between items-center">
-                  <Text className="text-gray-600">Battery Voltage</Text>
-                  <Text className={`font-bold ${getStatusColor(obdData.batteryVoltage, 12.0, 14.5)}`}>
+                <View style={styles.dataRow}>
+                  <Text style={styles.dataLabel}>Battery Voltage</Text>
+                  <Text style={[styles.dataValue, { color: getStatusColor(obdData.batteryVoltage, 12.0, 14.5) }]}>
                     {obdData.batteryVoltage.toFixed(1)}V
                   </Text>
                 </View>
@@ -224,10 +250,11 @@ export default function OBDLiveScreen({ navigation, route }: any) {
 
             {/* Check Engine Light */}
             {obdData.checkEngineLight && (
-              <View className="bg-red-100 border border-red-300 rounded-lg p-4 mb-4">
-                <Text className="text-red-800 font-bold text-center">⚠️ Check Engine Light ON</Text>
+              <View style={styles.warningCard}>
+                <Ionicons name="warning" size={24} color="#ef4444" />
+                <Text style={styles.warningTitle}>Check Engine Light ON</Text>
                 {obdData.codes.length > 0 && (
-                  <Text className="text-red-600 text-center mt-2">
+                  <Text style={styles.warningText}>
                     Error Codes: {obdData.codes.join(', ')}
                   </Text>
                 )}
@@ -236,9 +263,10 @@ export default function OBDLiveScreen({ navigation, route }: any) {
 
             {/* Recording Status */}
             {isRecording && (
-              <View className="bg-blue-100 border border-blue-300 rounded-lg p-4 mb-4">
-                <Text className="text-blue-800 font-bold text-center">🔴 Recording Live Data</Text>
-                <Text className="text-blue-600 text-center mt-2">
+              <View style={styles.recordingCard}>
+                <Ionicons name="radio-button-on" size={24} color="#0656E0" />
+                <Text style={styles.recordingTitle}>Recording Live Data</Text>
+                <Text style={styles.recordingText}>
                   Data Points: {recordingData.length}
                 </Text>
               </View>
@@ -248,10 +276,11 @@ export default function OBDLiveScreen({ navigation, route }: any) {
 
         {/* Navigation */}
         <TouchableOpacity
-          className="bg-purple-500 py-3 rounded-lg mb-4"
+          style={styles.backButton}
           onPress={() => navigation.navigate('Cars')}
         >
-          <Text className="text-white text-center font-semibold text-lg">Back to Cars</Text>
+          <Ionicons name="arrow-back" size={20} color="white" />
+          <Text style={styles.backButtonText}>Back to Cars</Text>
         </TouchableOpacity>
       </ScrollView>
     </View>
@@ -261,11 +290,236 @@ export default function OBDLiveScreen({ navigation, route }: any) {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#f9fafb',
+    backgroundColor: '#F3F4F6',
+    paddingLeft: 5,
+    paddingRight: 5,
   },
+
+  header: {
+    backgroundColor: 'transparent',
+    paddingTop: 48,
+    paddingBottom: 16,
+    paddingHorizontal: 16,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+  },
+
+  headerContent: {
+    flex: 1,
+  },
+  headerTitle: {
+    color: '#1f2937',
+    fontSize: 30,
+    fontFamily: 'Poppins-SemiBold',
+  },
+  headerActions: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+  },
+  iconButton: {
+    backgroundColor: '#f3f4f6',
+    borderRadius: 8,
+    padding: 8,
+    borderWidth: 1,
+    borderColor: '#e5e7eb',
+    alignItems: 'center',
+    justifyContent: 'center',
+    width: 36,
+    height: 36,
+  },
+
   scrollView: {
     flex: 1,
     paddingHorizontal: 16,
     paddingTop: 16,
+  },
+  connectionCard: {
+    backgroundColor: 'white',
+    borderRadius: 18,
+    padding: 16,
+    marginBottom: 16,
+    borderWidth: 1,
+    borderColor: '#e5e7eb',
+  },
+  connectionHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: 16,
+  },
+  connectionTitle: {
+    fontSize: 20,
+    fontWeight: 'bold',
+    color: '#1f2937',
+  },
+  connectionIndicator: {
+    width: 12,
+    height: 12,
+    borderRadius: 6,
+  },
+  connectionButtons: {
+    flexDirection: 'row',
+    gap: 8,
+  },
+  connectButton: {
+    flex: 1,
+    backgroundColor: '#059669',
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingVertical: 12,
+    borderRadius: 12,
+    gap: 8,
+  },
+  connectButtonText: {
+    color: 'white',
+    fontWeight: '600',
+    fontSize: 16,
+  },
+  connectedButtons: {
+    flexDirection: 'row',
+    gap: 8,
+    flex: 1,
+  },
+  disconnectButton: {
+    flex: 1,
+    backgroundColor: '#ef4444',
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingVertical: 12,
+    borderRadius: 12,
+    gap: 8,
+  },
+  disconnectButtonText: {
+    color: 'white',
+    fontWeight: '600',
+    fontSize: 16,
+  },
+  recordButton: {
+    flex: 1,
+    backgroundColor: '#0656E0',
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingVertical: 12,
+    borderRadius: 12,
+    gap: 8,
+  },
+  recordingButton: {
+    backgroundColor: '#ef4444',
+  },
+  recordButtonText: {
+    color: 'white',
+    fontWeight: '600',
+    fontSize: 16,
+  },
+  dataCard: {
+    backgroundColor: 'white',
+    borderRadius: 18,
+    padding: 16,
+    marginBottom: 16,
+    borderWidth: 1,
+    borderColor: '#e5e7eb',
+  },
+  dataCardTitle: {
+    fontSize: 20,
+    fontWeight: 'bold',
+    marginBottom: 16,
+    color: '#1f2937',
+  },
+  dataGrid: {
+    gap: 12,
+  },
+  dataRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+  },
+  dataLabel: {
+    fontSize: 16,
+    color: '#6b7280',
+  },
+  dataValue: {
+    fontSize: 16,
+    fontWeight: 'bold',
+  },
+  fuelGaugeContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+  },
+  fuelGauge: {
+    width: 80,
+    height: 8,
+    backgroundColor: '#e5e7eb',
+    borderRadius: 4,
+    overflow: 'hidden',
+  },
+  fuelGaugeFill: {
+    height: '100%',
+    borderRadius: 4,
+  },
+  warningCard: {
+    backgroundColor: '#fef2f2',
+    borderWidth: 1,
+    borderColor: '#fecaca',
+    borderRadius: 18,
+    padding: 16,
+    marginBottom: 16,
+    alignItems: 'center',
+  },
+  warningTitle: {
+    color: '#ef4444',
+    fontWeight: 'bold',
+    fontSize: 16,
+    textAlign: 'center',
+    marginTop: 8,
+  },
+  warningText: {
+    color: '#ef4444',
+    fontSize: 14,
+    textAlign: 'center',
+    marginTop: 4,
+  },
+  recordingCard: {
+    backgroundColor: '#eff6ff',
+    borderWidth: 1,
+    borderColor: '#bfdbfe',
+    borderRadius: 18,
+    padding: 16,
+    marginBottom: 16,
+    alignItems: 'center',
+  },
+  recordingTitle: {
+    color: '#0656E0',
+    fontWeight: 'bold',
+    fontSize: 16,
+    textAlign: 'center',
+    marginTop: 8,
+  },
+  recordingText: {
+    color: '#0656E0',
+    fontSize: 14,
+    textAlign: 'center',
+    marginTop: 4,
+  },
+  backButton: {
+    backgroundColor: '#8b5cf6',
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingVertical: 16,
+    borderRadius: 18,
+    marginBottom: 16,
+    gap: 8,
+  },
+  backButtonText: {
+    color: 'white',
+    textAlign: 'center',
+    fontWeight: '600',
+    fontSize: 18,
   },
 });

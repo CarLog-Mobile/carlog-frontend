@@ -1,5 +1,8 @@
 import React, { useState } from 'react';
-import { View, Text, TouchableOpacity, ScrollView, TextInput, Alert } from 'react-native';
+import { View, Text, TouchableOpacity, ScrollView, TextInput, Alert, StyleSheet, Dimensions } from 'react-native';
+import { Ionicons } from '@expo/vector-icons';
+
+const { width } = Dimensions.get('window');
 
 interface MaintenanceItem {
   id: string;
@@ -106,10 +109,10 @@ export default function MaintenanceScreen({ navigation, route }: any) {
 
   const getStatusColor = (status: MaintenanceItem['status']) => {
     switch (status) {
-      case 'completed': return 'bg-green-500';
-      case 'scheduled': return 'bg-blue-500';
-      case 'overdue': return 'bg-red-500';
-      default: return 'bg-gray-500';
+      case 'completed': return '#059669';
+      case 'scheduled': return '#0656E0';
+      case 'overdue': return '#ef4444';
+      default: return '#6b7280';
     }
   };
 
@@ -129,20 +132,38 @@ export default function MaintenanceScreen({ navigation, route }: any) {
 
   return (
     <View style={styles.container}>
+      {/* Header */}
+      <View style={styles.header}>
+        <View style={styles.headerContent}>
+          <Text style={styles.headerTitle}>Maintenance</Text>
+        </View>
+        <View style={styles.headerActions}>
+          <TouchableOpacity style={styles.iconButton} onPress={() => navigation.goBack()}>
+            <Ionicons name="arrow-back" size={20} color="#1f2937" />
+          </TouchableOpacity>
+          <TouchableOpacity style={styles.iconButton}>
+            <Ionicons name="search" size={20} color="#1f2937" />
+          </TouchableOpacity>
+          <TouchableOpacity style={styles.iconButton}>
+            <Ionicons name="filter" size={20} color="#1f2937" />
+          </TouchableOpacity>
+        </View>
+      </View>
+
       <ScrollView style={styles.scrollView}>
-        {/* Summary Cards */}
-        <View className="flex-row gap-3 mb-4">
-          <View className="flex-1 bg-white rounded-lg p-3 shadow-sm">
-            <Text className="text-gray-600 text-sm">Completed</Text>
-            <Text className="text-xl font-bold text-green-600">{completedItems.length}</Text>
+        {/* Stats Cards */}
+        <View style={styles.statsRow}>
+          <View style={styles.statCard}>
+            <Text style={styles.statLabel}>Completed</Text>
+            <Text style={styles.statValue}>{completedItems.length}</Text>
           </View>
-          <View className="flex-1 bg-white rounded-lg p-3 shadow-sm">
-            <Text className="text-gray-600 text-sm">Scheduled</Text>
-            <Text className="text-xl font-bold text-blue-600">{scheduledItems.length}</Text>
+          <View style={styles.statCard}>
+            <Text style={styles.statLabel}>Scheduled</Text>
+            <Text style={styles.statValue}>{scheduledItems.length}</Text>
           </View>
-          <View className="flex-1 bg-white rounded-lg p-3 shadow-sm">
-            <Text className="text-gray-600 text-sm">Total Cost</Text>
-            <Text className="text-xl font-bold text-orange-600">${totalCost.toFixed(2)}</Text>
+          <View style={styles.statCard}>
+            <Text style={styles.statLabel}>Total Cost</Text>
+            <Text style={styles.statValue}>${totalCost.toFixed(2)}</Text>
           </View>
         </View>
 
@@ -150,42 +171,57 @@ export default function MaintenanceScreen({ navigation, route }: any) {
         {maintenanceItems.map((item) => (
           <TouchableOpacity
             key={item.id}
-            className="bg-white rounded-lg p-4 mb-3 shadow-sm border border-gray-200"
+            style={styles.maintenanceCard}
             onPress={() => navigation.navigate('OBDLive', { maintenanceId: item.id })}
           >
-            <View className="flex-row justify-between items-start">
-              <View className="flex-1">
-                <View className="flex-row items-center mb-2">
-                  <Text className="text-2xl mr-2">{getTypeIcon(item.type)}</Text>
-                  <View className="flex-1">
-                    <Text className="text-lg font-semibold text-gray-800">{item.title}</Text>
-                    <Text className="text-gray-600 text-sm">{item.description}</Text>
+            <View style={styles.maintenanceCardContent}>
+              <View style={styles.maintenanceInfo}>
+                <View style={styles.maintenanceHeader}>
+                  <Text style={styles.maintenanceIcon}>{getTypeIcon(item.type)}</Text>
+                  <View style={styles.maintenanceTitleSection}>
+                    <Text style={styles.maintenanceTitle}>{item.title}</Text>
+                    <Text style={styles.maintenanceDescription}>{item.description}</Text>
                   </View>
                 </View>
-                <Text className="text-gray-600">{item.date}</Text>
-                <View className="flex-row gap-4 mt-2">
-                  <Text className="text-gray-500">{item.mileage} mi</Text>
-                  {item.cost > 0 && <Text className="text-gray-500">${item.cost}</Text>}
-                  {item.nextDueMileage && <Text className="text-blue-500">Due: {item.nextDueMileage} mi</Text>}
+                <Text style={styles.maintenanceDate}>{item.date}</Text>
+                <View style={styles.maintenanceDetails}>
+                  <View style={styles.maintenanceDetail}>
+                    <Ionicons name="speedometer" size={14} color="#9ca3af" />
+                    <Text style={styles.maintenanceDetailText}>{item.mileage} mi</Text>
+                  </View>
+                  {item.cost > 0 && (
+                    <View style={styles.maintenanceDetail}>
+                      <Ionicons name="card" size={14} color="#9ca3af" />
+                      <Text style={styles.maintenanceDetailText}>${item.cost}</Text>
+                    </View>
+                  )}
+                  {item.nextDueMileage && (
+                    <View style={styles.maintenanceDetail}>
+                      <Ionicons name="calendar" size={14} color="#0656E0" />
+                      <Text style={styles.maintenanceDetailTextDue}>Due: {item.nextDueMileage} mi</Text>
+                    </View>
+                  )}
                 </View>
               </View>
-              <View className="flex-col gap-2">
-                <View className={`px-2 py-1 rounded ${getStatusColor(item.status)}`}>
-                  <Text className="text-white text-xs capitalize">{item.status}</Text>
+              <View style={styles.maintenanceActions}>
+                <View style={[styles.statusBadge, { backgroundColor: getStatusColor(item.status) }]}>
+                  <Text style={styles.statusText}>{item.status}</Text>
                 </View>
                 {item.status === 'scheduled' && (
                   <TouchableOpacity
                     onPress={() => markCompleted(item.id)}
-                    className="bg-green-500 px-2 py-1 rounded"
+                    style={styles.completeButton}
                   >
-                    <Text className="text-white text-xs">Complete</Text>
+                    <Ionicons name="checkmark" size={14} color="white" />
+                    <Text style={styles.completeButtonText}>Complete</Text>
                   </TouchableOpacity>
                 )}
                 <TouchableOpacity
                   onPress={() => deleteItem(item.id)}
-                  className="bg-red-500 px-2 py-1 rounded"
+                  style={styles.deleteButton}
                 >
-                  <Text className="text-white text-xs">Delete</Text>
+                  <Ionicons name="trash-outline" size={16} color="white" />
+                  <Text style={styles.deleteButtonText}>Delete</Text>
                 </TouchableOpacity>
               </View>
             </View>
@@ -193,66 +229,66 @@ export default function MaintenanceScreen({ navigation, route }: any) {
         ))}
 
         {showAddForm && (
-          <View className="bg-white rounded-lg p-4 mb-4 shadow-sm border border-gray-200">
-            <Text className="text-lg font-bold mb-4">Add Maintenance Item</Text>
+          <View style={styles.formCard}>
+            <Text style={styles.formTitle}>Add Maintenance Item</Text>
             <TextInput
-              className="border border-gray-300 rounded p-2 mb-3"
+              style={styles.input}
               placeholder="Title (e.g., Oil Change)"
               value={newItem.title}
               onChangeText={(text) => setNewItem({...newItem, title: text})}
             />
             <TextInput
-              className="border border-gray-300 rounded p-2 mb-3"
+              style={styles.input}
               placeholder="Description (optional)"
               value={newItem.description}
               onChangeText={(text) => setNewItem({...newItem, description: text})}
             />
             <TextInput
-              className="border border-gray-300 rounded p-2 mb-3"
+              style={styles.input}
               placeholder="Current Mileage"
               value={newItem.mileage}
               onChangeText={(text) => setNewItem({...newItem, mileage: text})}
               keyboardType="numeric"
             />
             <TextInput
-              className="border border-gray-300 rounded p-2 mb-3"
+              style={styles.input}
               placeholder="Cost ($)"
               value={newItem.cost}
               onChangeText={(text) => setNewItem({...newItem, cost: text})}
               keyboardType="numeric"
             />
             <TextInput
-              className="border border-gray-300 rounded p-2 mb-3"
+              style={styles.input}
               placeholder="Next Due Mileage (optional)"
               value={newItem.nextDueMileage}
               onChangeText={(text) => setNewItem({...newItem, nextDueMileage: text})}
               keyboardType="numeric"
             />
-            <View className="flex-row gap-2 mb-4">
+            <View style={styles.typeButtons}>
               {['oil_change', 'tire_rotation', 'brake_service', 'inspection', 'other'].map((type) => (
                 <TouchableOpacity
                   key={type}
-                  className={`flex-1 py-2 rounded ${newItem.type === type ? 'bg-orange-500' : 'bg-gray-300'}`}
+                  style={[styles.typeButton, newItem.type === type && styles.typeButtonActive]}
                   onPress={() => setNewItem({...newItem, type: type as MaintenanceItem['type']})}
                 >
-                  <Text className={`text-center font-semibold text-xs ${newItem.type === type ? 'text-white' : 'text-gray-700'}`}>
+                  <Text style={[styles.typeButtonText, newItem.type === type && styles.typeButtonTextActive]}>
                     {type.replace('_', ' ')}
                   </Text>
                 </TouchableOpacity>
               ))}
             </View>
-            <View className="flex-row gap-2">
+            <View style={styles.formButtons}>
               <TouchableOpacity
-                className="flex-1 bg-orange-500 py-2 rounded"
+                style={styles.addButton}
                 onPress={addMaintenanceItem}
               >
-                <Text className="text-white text-center font-semibold">Add Item</Text>
+                <Text style={styles.addButtonText}>Add Item</Text>
               </TouchableOpacity>
               <TouchableOpacity
-                className="flex-1 bg-gray-300 py-2 rounded"
+                style={styles.cancelButton}
                 onPress={() => setShowAddForm(false)}
               >
-                <Text className="text-gray-700 text-center font-semibold">Cancel</Text>
+                <Text style={styles.cancelButtonText}>Cancel</Text>
               </TouchableOpacity>
             </View>
           </View>
@@ -260,10 +296,11 @@ export default function MaintenanceScreen({ navigation, route }: any) {
 
         {!showAddForm && (
           <TouchableOpacity
-            className="bg-orange-500 py-3 rounded-lg mb-4"
+            style={styles.addNewButton}
             onPress={() => setShowAddForm(true)}
           >
-            <Text className="text-white text-center font-semibold text-lg">+ Add Maintenance Item</Text>
+            <Ionicons name="add" size={24} color="white" />
+            <Text style={styles.addNewButtonText}>Add Maintenance Item</Text>
           </TouchableOpacity>
         )}
       </ScrollView>
@@ -274,11 +311,275 @@ export default function MaintenanceScreen({ navigation, route }: any) {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#f9fafb',
+    backgroundColor: '#F3F4F6',
+    paddingLeft: 5,
+    paddingRight: 5,
   },
+
+  header: {
+    backgroundColor: 'transparent',
+    paddingTop: 48,
+    paddingBottom: 16,
+    paddingHorizontal: 16,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+  },
+
+  headerContent: {
+    flex: 1,
+  },
+  headerTitle: {
+    color: '#1f2937',
+    fontSize: 30,
+    fontFamily: 'Poppins-SemiBold',
+  },
+  headerActions: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+  },
+  iconButton: {
+    backgroundColor: '#f3f4f6',
+    borderRadius: 8,
+    padding: 8,
+    borderWidth: 1,
+    borderColor: '#e5e7eb',
+    alignItems: 'center',
+    justifyContent: 'center',
+    width: 36,
+    height: 36,
+  },
+
   scrollView: {
     flex: 1,
     paddingHorizontal: 16,
     paddingTop: 16,
+  },
+  statsRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    marginBottom: 24,
+    gap: 8,
+  },
+  statCard: {
+    backgroundColor: 'white',
+    borderRadius: 18,
+    padding: 16,
+    flex: 1,
+    alignItems: 'flex-start',
+  },
+  statValue: {
+    fontSize: 28,
+    fontFamily: 'Coinbase-Sans-Medium',
+    color: '#1f2937',
+    marginTop: 4,
+  },
+  statLabel: {
+    fontSize: 14,
+    color: '#6b7280',
+    fontFamily: 'Coinbase-Sans-Medium',
+  },
+  maintenanceCard: {
+    backgroundColor: 'white',
+    borderRadius: 18,
+    padding: 16,
+    marginBottom: 12,
+    borderWidth: 1,
+    borderColor: '#e5e7eb',
+  },
+  maintenanceCardContent: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'flex-start',
+  },
+  maintenanceInfo: {
+    flex: 1,
+  },
+  maintenanceHeader: {
+    flexDirection: 'row',
+    alignItems: 'flex-start',
+    marginBottom: 8,
+  },
+  maintenanceIcon: {
+    fontSize: 24,
+    marginRight: 12,
+  },
+  maintenanceTitleSection: {
+    flex: 1,
+  },
+  maintenanceTitle: {
+    fontSize: 18,
+    fontWeight: '600',
+    color: '#1f2937',
+    marginBottom: 4,
+  },
+  maintenanceDescription: {
+    fontSize: 14,
+    color: '#6b7280',
+  },
+  maintenanceDate: {
+    color: '#6b7280',
+    fontSize: 16,
+    marginBottom: 8,
+  },
+  maintenanceDetails: {
+    flexDirection: 'row',
+    gap: 16,
+  },
+  maintenanceDetail: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
+  },
+  maintenanceDetailText: {
+    color: '#9ca3af',
+    fontSize: 14,
+  },
+  maintenanceDetailTextDue: {
+    color: '#0656E0',
+    fontSize: 14,
+  },
+  maintenanceActions: {
+    alignItems: 'flex-end',
+    gap: 8,
+  },
+  statusBadge: {
+    paddingHorizontal: 8,
+    paddingVertical: 4,
+    borderRadius: 6,
+  },
+  statusText: {
+    color: 'white',
+    fontSize: 12,
+    fontWeight: '500',
+    textTransform: 'capitalize',
+  },
+  completeButton: {
+    backgroundColor: '#059669',
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingHorizontal: 8,
+    paddingVertical: 4,
+    borderRadius: 6,
+    gap: 4,
+  },
+  completeButtonText: {
+    color: 'white',
+    fontSize: 12,
+    fontWeight: '500',
+  },
+  deleteButton: {
+    backgroundColor: '#ef4444',
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingHorizontal: 12,
+    paddingVertical: 8,
+    borderRadius: 8,
+    gap: 6,
+  },
+  deleteButtonText: {
+    color: 'white',
+    fontSize: 14,
+    fontWeight: '500',
+  },
+  formCard: {
+    backgroundColor: 'white',
+    borderRadius: 18,
+    padding: 16,
+    marginBottom: 16,
+    borderWidth: 1,
+    borderColor: '#e5e7eb',
+  },
+  formTitle: {
+    fontSize: 20,
+    fontWeight: 'bold',
+    marginBottom: 16,
+    color: '#1f2937',
+  },
+  input: {
+    borderWidth: 1,
+    borderColor: '#d1d5db',
+    borderRadius: 12,
+    padding: 12,
+    marginBottom: 12,
+    fontSize: 16,
+    backgroundColor: '#f9fafb',
+  },
+  typeButtons: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: 8,
+    marginBottom: 16,
+  },
+  typeButton: {
+    flex: 1,
+    minWidth: '45%',
+    backgroundColor: '#f3f4f6',
+    paddingVertical: 12,
+    borderRadius: 12,
+    borderWidth: 1,
+    borderColor: '#e5e7eb',
+  },
+  typeButtonActive: {
+    backgroundColor: '#f97316',
+    borderColor: '#f97316',
+  },
+  typeButtonText: {
+    textAlign: 'center',
+    fontWeight: '600',
+    fontSize: 12,
+    color: '#374151',
+  },
+  typeButtonTextActive: {
+    color: 'white',
+  },
+  formButtons: {
+    flexDirection: 'row',
+    gap: 8,
+  },
+  addButton: {
+    flex: 1,
+    backgroundColor: '#f97316',
+    paddingVertical: 12,
+    borderRadius: 12,
+  },
+  addButtonText: {
+    color: 'white',
+    textAlign: 'center',
+    fontWeight: '600',
+    fontSize: 16,
+  },
+  cancelButton: {
+    flex: 1,
+    backgroundColor: '#f3f4f6',
+    paddingVertical: 12,
+    borderRadius: 12,
+    borderWidth: 1,
+    borderColor: '#e5e7eb',
+  },
+  cancelButtonText: {
+    color: '#374151',
+    textAlign: 'center',
+    fontWeight: '600',
+    fontSize: 16,
+  },
+  addNewButton: {
+    backgroundColor: '#f97316',
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingVertical: 16,
+    borderRadius: 18,
+    marginBottom: 16,
+    gap: 8,
+  },
+  addNewButtonText: {
+    color: 'white',
+    textAlign: 'center',
+    fontWeight: '600',
+    fontSize: 18,
   },
 });

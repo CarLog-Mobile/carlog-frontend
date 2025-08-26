@@ -25,10 +25,10 @@ export default function DashboardScreen({ navigation }: any) {
   };
 
   const quickActions = [
-    { title: 'Cars', icon: 'car' as const, onPress: () => navigation.navigate('Cars') },
-    { title: 'Logs', icon: 'document-text' as const, onPress: () => navigation.navigate('Logs') },
+    { title: 'Fuel', icon: 'water' as const, onPress: () => navigation.navigate('Fuel') },
     { title: 'Trips', icon: 'map' as const, onPress: () => navigation.navigate('Trips') },
-    { title: 'Scanner', icon: 'scan' as const, onPress: () => navigation.navigate('Scanner') },
+    { title: 'Repair', icon: 'construct' as const, onPress: () => navigation.navigate('Maintenance') },
+    { title: 'OBD', icon: 'scan' as const, onPress: () => navigation.navigate('OBDLive') },
   ];
 
   const recentActivity = [
@@ -77,7 +77,7 @@ export default function DashboardScreen({ navigation }: any) {
           <View style={styles.vehicleSection}>
             <View style={styles.vehicleHeader}>
               <Text style={styles.vehicleHeaderTitle}>Currently Selected</Text>
-              <TouchableOpacity>
+              <TouchableOpacity onPress={() => navigation.navigate('Cars')}>
                 <Text style={styles.changeVehicleText}>Change vehicle</Text>
               </TouchableOpacity>
             </View>
@@ -87,7 +87,7 @@ export default function DashboardScreen({ navigation }: any) {
                   <Text style={styles.vehicleName}>Toyota Camry</Text>
                   <Text style={styles.vehicleYear}>2022</Text>
                   <Text style={styles.vehiclePlate}>ABC-1234</Text>
-                  <TouchableOpacity style={styles.detailsButton}>
+                  <TouchableOpacity style={styles.detailsButton} onPress={() => navigation.navigate('Cars')}>
                     <Ionicons name="eye-outline" size={16} color="#1f2937" />
                     <Text style={styles.detailsButtonText}>Details</Text>
                   </TouchableOpacity>
@@ -105,7 +105,7 @@ export default function DashboardScreen({ navigation }: any) {
           <View style={styles.section}>
             <View style={styles.sectionHeader}>
               <Text style={styles.sectionTitle}>Quick Actions</Text>
-              <TouchableOpacity>
+              <TouchableOpacity onPress={() => navigation.navigate('Cars')}>
                 <Text style={styles.viewAllText}>View all</Text>
               </TouchableOpacity>
             </View>
@@ -130,7 +130,7 @@ export default function DashboardScreen({ navigation }: any) {
           <View style={styles.section}>
             <View style={styles.sectionHeader}>
               <Text style={styles.sectionTitle}>Recent Activity</Text>
-              <TouchableOpacity>
+              <TouchableOpacity onPress={() => navigation.navigate('Trips')}>
                 <Text style={styles.viewAllText}>View all</Text>
               </TouchableOpacity>
             </View>

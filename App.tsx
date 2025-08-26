@@ -3,11 +3,17 @@ import { View } from 'react-native';
 import { StatusBar } from 'expo-status-bar';
 import * as Font from 'expo-font';
 import DashboardScreen from './screens/DashboardScreen';
+import CarsScreen from './screens/CarsScreen';
+import TripsScreen from './screens/TripsScreen';
+import FuelScreen from './screens/FuelScreen';
+import MaintenanceScreen from './screens/MaintenanceScreen';
+import OBDLiveScreen from './screens/OBDLiveScreen';
 
 import './global.css';
 
 export default function App() {
   const [fontsLoaded, setFontsLoaded] = useState(false);
+  const [currentScreen, setCurrentScreen] = useState('Dashboard');
 
   useEffect(() => {
     async function loadFonts() {
@@ -21,13 +27,41 @@ export default function App() {
     loadFonts();
   }, []);
 
+  const navigation = {
+    navigate: (screenName: string) => {
+      setCurrentScreen(screenName);
+    },
+    goBack: () => {
+      setCurrentScreen('Dashboard');
+    }
+  };
+
+  const renderScreen = () => {
+    switch (currentScreen) {
+      case 'Dashboard':
+        return <DashboardScreen navigation={navigation} />;
+      case 'Cars':
+        return <CarsScreen navigation={navigation} />;
+      case 'Trips':
+        return <TripsScreen navigation={navigation} />;
+      case 'Fuel':
+        return <FuelScreen navigation={navigation} />;
+      case 'Maintenance':
+        return <MaintenanceScreen navigation={navigation} />;
+      case 'OBDLive':
+        return <OBDLiveScreen navigation={navigation} />;
+      default:
+        return <DashboardScreen navigation={navigation} />;
+    }
+  };
+
   if (!fontsLoaded) {
     return <View style={{ flex: 1 }} />;
   }
 
   return (
     <View style={{ flex: 1 }}>
-      <DashboardScreen navigation={{ navigate: () => {} }} />
+      {renderScreen()}
       <StatusBar style="auto" />
     </View>
   );

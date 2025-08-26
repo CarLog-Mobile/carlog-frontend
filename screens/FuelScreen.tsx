@@ -1,5 +1,8 @@
 import React, { useState } from 'react';
-import { View, Text, TouchableOpacity, ScrollView, TextInput, Alert } from 'react-native';
+import { View, Text, TouchableOpacity, ScrollView, TextInput, Alert, StyleSheet, Dimensions } from 'react-native';
+import { Ionicons } from '@expo/vector-icons';
+
+const { width } = Dimensions.get('window');
 
 interface FuelEntry {
   id: string;
@@ -88,20 +91,38 @@ export default function FuelScreen({ navigation, route }: any) {
 
   return (
     <View style={styles.container}>
+      {/* Header */}
+      <View style={styles.header}>
+        <View style={styles.headerContent}>
+          <Text style={styles.headerTitle}>Fuel Logs</Text>
+        </View>
+        <View style={styles.headerActions}>
+          <TouchableOpacity style={styles.iconButton} onPress={() => navigation.goBack()}>
+            <Ionicons name="arrow-back" size={20} color="#1f2937" />
+          </TouchableOpacity>
+          <TouchableOpacity style={styles.iconButton}>
+            <Ionicons name="search" size={20} color="#1f2937" />
+          </TouchableOpacity>
+          <TouchableOpacity style={styles.iconButton}>
+            <Ionicons name="filter" size={20} color="#1f2937" />
+          </TouchableOpacity>
+        </View>
+      </View>
+
       <ScrollView style={styles.scrollView}>
-        {/* Summary Cards */}
-        <View className="flex-row gap-3 mb-4">
-          <View className="flex-1 bg-white rounded-lg p-3 shadow-sm">
-            <Text className="text-gray-600 text-sm">Total Gallons</Text>
-            <Text className="text-xl font-bold text-green-600">{totalGallons.toFixed(1)}</Text>
+        {/* Stats Cards */}
+        <View style={styles.statsRow}>
+          <View style={styles.statCard}>
+            <Text style={styles.statLabel}>Total Gallons</Text>
+            <Text style={styles.statValue}>{totalGallons.toFixed(1)}</Text>
           </View>
-          <View className="flex-1 bg-white rounded-lg p-3 shadow-sm">
-            <Text className="text-gray-600 text-sm">Total Cost</Text>
-            <Text className="text-xl font-bold text-red-600">${totalCost.toFixed(2)}</Text>
+          <View style={styles.statCard}>
+            <Text style={styles.statLabel}>Total Cost</Text>
+            <Text style={styles.statValue}>${totalCost.toFixed(2)}</Text>
           </View>
-          <View className="flex-1 bg-white rounded-lg p-3 shadow-sm">
-            <Text className="text-gray-600 text-sm">Avg Price</Text>
-            <Text className="text-xl font-bold text-blue-600">${avgCostPerGallon.toFixed(2)}</Text>
+          <View style={styles.statCard}>
+            <Text style={styles.statLabel}>Avg Price</Text>
+            <Text style={styles.statValue}>${avgCostPerGallon.toFixed(2)}</Text>
           </View>
         </View>
 
@@ -109,89 +130,99 @@ export default function FuelScreen({ navigation, route }: any) {
         {fuelEntries.map((entry) => (
           <TouchableOpacity
             key={entry.id}
-            className="bg-white rounded-lg p-4 mb-3 shadow-sm border border-gray-200"
+            style={styles.fuelCard}
             onPress={() => navigation.navigate('Maintenance', { fuelEntryId: entry.id })}
           >
-            <View className="flex-row justify-between items-start">
-              <View className="flex-1">
-                <View className="flex-row justify-between items-center mb-2">
-                  <Text className="text-lg font-semibold text-gray-800">{entry.location}</Text>
-                  <Text className="text-lg font-bold text-green-600">${entry.totalCost.toFixed(2)}</Text>
+            <View style={styles.fuelCardContent}>
+              <View style={styles.fuelInfo}>
+                <View style={styles.fuelHeader}>
+                  <Text style={styles.fuelLocation}>{entry.location}</Text>
+                  <Text style={styles.fuelTotalCost}>${entry.totalCost.toFixed(2)}</Text>
                 </View>
-                <Text className="text-gray-600">{entry.date}</Text>
-                <View className="flex-row gap-4 mt-2">
-                  <Text className="text-gray-500">{entry.gallons} gal</Text>
-                  <Text className="text-gray-500">${entry.costPerGallon}/gal</Text>
-                  <Text className="text-gray-500">{entry.mileage} mi</Text>
+                <Text style={styles.fuelDate}>{entry.date}</Text>
+                <View style={styles.fuelDetails}>
+                  <View style={styles.fuelDetail}>
+                    <Ionicons name="water" size={14} color="#9ca3af" />
+                    <Text style={styles.fuelDetailText}>{entry.gallons} gal</Text>
+                  </View>
+                  <View style={styles.fuelDetail}>
+                    <Ionicons name="card" size={14} color="#9ca3af" />
+                    <Text style={styles.fuelDetailText}>${entry.costPerGallon}/gal</Text>
+                  </View>
+                  <View style={styles.fuelDetail}>
+                    <Ionicons name="speedometer" size={14} color="#9ca3af" />
+                    <Text style={styles.fuelDetailText}>{entry.mileage} mi</Text>
+                  </View>
                 </View>
-                <Text className="text-gray-400 text-sm mt-1">{entry.fuelType}</Text>
+                <Text style={styles.fuelType}>{entry.fuelType}</Text>
               </View>
               <TouchableOpacity
                 onPress={() => deleteEntry(entry.id)}
-                className="bg-red-500 px-2 py-1 rounded"
+                style={styles.deleteButton}
               >
-                <Text className="text-white text-xs">Delete</Text>
+                <Ionicons name="trash-outline" size={16} color="white" />
+                <Text style={styles.deleteButtonText}>Delete</Text>
               </TouchableOpacity>
             </View>
           </TouchableOpacity>
         ))}
 
         {showAddForm && (
-          <View className="bg-white rounded-lg p-4 mb-4 shadow-sm border border-gray-200">
-            <Text className="text-lg font-bold mb-4">Add Fuel Entry</Text>
+          <View style={styles.formCard}>
+            <Text style={styles.formTitle}>Add Fuel Entry</Text>
             <TextInput
-              className="border border-gray-300 rounded p-2 mb-3"
+              style={styles.input}
               placeholder="Gallons"
               value={newEntry.gallons}
               onChangeText={(text) => setNewEntry({...newEntry, gallons: text})}
               keyboardType="numeric"
             />
             <TextInput
-              className="border border-gray-300 rounded p-2 mb-3"
+              style={styles.input}
               placeholder="Cost per Gallon ($)"
               value={newEntry.costPerGallon}
               onChangeText={(text) => setNewEntry({...newEntry, costPerGallon: text})}
               keyboardType="numeric"
             />
             <TextInput
-              className="border border-gray-300 rounded p-2 mb-3"
+              style={styles.input}
               placeholder="Current Mileage"
               value={newEntry.mileage}
               onChangeText={(text) => setNewEntry({...newEntry, mileage: text})}
               keyboardType="numeric"
             />
             <TextInput
-              className="border border-gray-300 rounded p-2 mb-3"
+              style={styles.input}
               placeholder="Location (optional)"
               value={newEntry.location}
               onChangeText={(text) => setNewEntry({...newEntry, location: text})}
             />
-            <View className="flex-row gap-2 mb-4">
+            <View style={styles.fuelTypeButtons}>
               <TouchableOpacity
-                className={`flex-1 py-2 rounded ${newEntry.fuelType === 'Regular' ? 'bg-blue-500' : 'bg-gray-300'}`}
+                style={[styles.fuelTypeButton, newEntry.fuelType === 'Regular' && styles.fuelTypeButtonActive]}
                 onPress={() => setNewEntry({...newEntry, fuelType: 'Regular'})}
               >
-                <Text className={`text-center font-semibold ${newEntry.fuelType === 'Regular' ? 'text-white' : 'text-gray-700'}`}>Regular</Text>
+                <Text style={[styles.fuelTypeButtonText, newEntry.fuelType === 'Regular' && styles.fuelTypeButtonTextActive]}>Regular</Text>
               </TouchableOpacity>
               <TouchableOpacity
-                className={`flex-1 py-2 rounded ${newEntry.fuelType === 'Premium' ? 'bg-blue-500' : 'bg-gray-300'}`}
+                style={[styles.fuelTypeButton, newEntry.fuelType === 'Premium' && styles.fuelTypeButtonActive]}
                 onPress={() => setNewEntry({...newEntry, fuelType: 'Premium'})}
               >
-                <Text className={`text-center font-semibold ${newEntry.fuelType === 'Premium' ? 'text-white' : 'text-gray-700'}`}>Premium</Text>
+                <Text style={[styles.fuelTypeButtonText, newEntry.fuelType === 'Premium' && styles.fuelTypeButtonTextActive]}>Premium</Text>
               </TouchableOpacity>
             </View>
-            <View className="flex-row gap-2">
+            <View style={styles.formButtons}>
               <TouchableOpacity
-                className="flex-1 bg-green-500 py-2 rounded"
+                style={styles.addButton}
                 onPress={addFuelEntry}
               >
-                <Text className="text-white text-center font-semibold">Add Entry</Text>
+                <Text style={styles.addButtonText}>Add Entry</Text>
               </TouchableOpacity>
               <TouchableOpacity
-                className="flex-1 bg-gray-300 py-2 rounded"
+                style={styles.cancelButton}
                 onPress={() => setShowAddForm(false)}
               >
-                <Text className="text-gray-700 text-center font-semibold">Cancel</Text>
+                <Text style={styles.cancelButtonText}>Cancel</Text>
               </TouchableOpacity>
             </View>
           </View>
@@ -199,10 +230,11 @@ export default function FuelScreen({ navigation, route }: any) {
 
         {!showAddForm && (
           <TouchableOpacity
-            className="bg-green-500 py-3 rounded-lg mb-4"
+            style={styles.addNewButton}
             onPress={() => setShowAddForm(true)}
           >
-            <Text className="text-white text-center font-semibold text-lg">+ Add Fuel Entry</Text>
+            <Ionicons name="add" size={24} color="white" />
+            <Text style={styles.addNewButtonText}>Add Fuel Entry</Text>
           </TouchableOpacity>
         )}
       </ScrollView>
@@ -213,11 +245,238 @@ export default function FuelScreen({ navigation, route }: any) {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#f9fafb',
+    backgroundColor: '#F3F4F6',
+    paddingLeft: 5,
+    paddingRight: 5,
   },
+
+  header: {
+    backgroundColor: 'transparent',
+    paddingTop: 48,
+    paddingBottom: 16,
+    paddingHorizontal: 16,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+  },
+
+  headerContent: {
+    flex: 1,
+  },
+  headerTitle: {
+    color: '#1f2937',
+    fontSize: 30,
+    fontFamily: 'Poppins-SemiBold',
+  },
+  headerActions: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+  },
+  iconButton: {
+    backgroundColor: '#f3f4f6',
+    borderRadius: 8,
+    padding: 8,
+    borderWidth: 1,
+    borderColor: '#e5e7eb',
+    alignItems: 'center',
+    justifyContent: 'center',
+    width: 36,
+    height: 36,
+  },
+
   scrollView: {
     flex: 1,
     paddingHorizontal: 16,
     paddingTop: 16,
+  },
+  statsRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    marginBottom: 24,
+    gap: 8,
+  },
+  statCard: {
+    backgroundColor: 'white',
+    borderRadius: 18,
+    padding: 16,
+    flex: 1,
+    alignItems: 'flex-start',
+  },
+  statValue: {
+    fontSize: 28,
+    fontFamily: 'Coinbase-Sans-Medium',
+    color: '#1f2937',
+    marginTop: 4,
+  },
+  statLabel: {
+    fontSize: 14,
+    color: '#6b7280',
+    fontFamily: 'Coinbase-Sans-Medium',
+  },
+  fuelCard: {
+    backgroundColor: 'white',
+    borderRadius: 18,
+    padding: 16,
+    marginBottom: 12,
+    borderWidth: 1,
+    borderColor: '#e5e7eb',
+  },
+  fuelCardContent: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'flex-start',
+  },
+  fuelInfo: {
+    flex: 1,
+  },
+  fuelHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: 8,
+  },
+  fuelLocation: {
+    fontSize: 18,
+    fontWeight: '600',
+    color: '#1f2937',
+  },
+  fuelTotalCost: {
+    fontSize: 18,
+    fontWeight: 'bold',
+    color: '#059669',
+  },
+  fuelDate: {
+    color: '#6b7280',
+    fontSize: 16,
+    marginBottom: 8,
+  },
+  fuelDetails: {
+    flexDirection: 'row',
+    gap: 16,
+    marginBottom: 8,
+  },
+  fuelDetail: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
+  },
+  fuelDetailText: {
+    color: '#9ca3af',
+    fontSize: 14,
+  },
+  fuelType: {
+    color: '#6b7280',
+    fontSize: 12,
+  },
+  deleteButton: {
+    backgroundColor: '#ef4444',
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingHorizontal: 12,
+    paddingVertical: 8,
+    borderRadius: 8,
+    gap: 6,
+  },
+  deleteButtonText: {
+    color: 'white',
+    fontSize: 14,
+    fontWeight: '500',
+  },
+  formCard: {
+    backgroundColor: 'white',
+    borderRadius: 18,
+    padding: 16,
+    marginBottom: 16,
+    borderWidth: 1,
+    borderColor: '#e5e7eb',
+  },
+  formTitle: {
+    fontSize: 20,
+    fontWeight: 'bold',
+    marginBottom: 16,
+    color: '#1f2937',
+  },
+  input: {
+    borderWidth: 1,
+    borderColor: '#d1d5db',
+    borderRadius: 12,
+    padding: 12,
+    marginBottom: 12,
+    fontSize: 16,
+    backgroundColor: '#f9fafb',
+  },
+  fuelTypeButtons: {
+    flexDirection: 'row',
+    gap: 8,
+    marginBottom: 16,
+  },
+  fuelTypeButton: {
+    flex: 1,
+    backgroundColor: '#f3f4f6',
+    paddingVertical: 12,
+    borderRadius: 12,
+    borderWidth: 1,
+    borderColor: '#e5e7eb',
+  },
+  fuelTypeButtonActive: {
+    backgroundColor: '#0656E0',
+    borderColor: '#0656E0',
+  },
+  fuelTypeButtonText: {
+    textAlign: 'center',
+    fontWeight: '600',
+    fontSize: 14,
+    color: '#374151',
+  },
+  fuelTypeButtonTextActive: {
+    color: 'white',
+  },
+  formButtons: {
+    flexDirection: 'row',
+    gap: 8,
+  },
+  addButton: {
+    flex: 1,
+    backgroundColor: '#059669',
+    paddingVertical: 12,
+    borderRadius: 12,
+  },
+  addButtonText: {
+    color: 'white',
+    textAlign: 'center',
+    fontWeight: '600',
+    fontSize: 16,
+  },
+  cancelButton: {
+    flex: 1,
+    backgroundColor: '#f3f4f6',
+    paddingVertical: 12,
+    borderRadius: 12,
+    borderWidth: 1,
+    borderColor: '#e5e7eb',
+  },
+  cancelButtonText: {
+    color: '#374151',
+    textAlign: 'center',
+    fontWeight: '600',
+    fontSize: 16,
+  },
+  addNewButton: {
+    backgroundColor: '#059669',
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingVertical: 16,
+    borderRadius: 18,
+    marginBottom: 16,
+    gap: 8,
+  },
+  addNewButtonText: {
+    color: 'white',
+    textAlign: 'center',
+    fontWeight: '600',
+    fontSize: 18,
   },
 });
