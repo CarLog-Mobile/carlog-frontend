@@ -46,32 +46,22 @@ export default function DashboardScreen({ navigation }: any) {
       <View style={styles.header}>
         <View style={styles.headerContent}>
           <Text style={styles.headerTitle}>Dashboard</Text>
-          <Text style={styles.headerSubtitle}>Welcome back!</Text>
         </View>
+        <TouchableOpacity style={styles.notificationButton}>
+          <Ionicons name="notifications-outline" size={24} color="#1f2937" />
+        </TouchableOpacity>
       </View>
 
         <ScrollView style={styles.scrollView}>
           {/* Stats Cards */}
-          <View style={styles.statsGrid}>
+          <View style={styles.statsRow}>
             <View style={styles.statCard}>
-              <Ionicons name="car" size={24} color="#3b82f6" style={styles.statIcon} />
-              <Text style={styles.statValue}>{stats.totalCars}</Text>
-              <Text style={styles.statLabel}>Cars</Text>
-            </View>
-            <View style={styles.statCard}>
-              <Ionicons name="map" size={24} color="#10b981" style={styles.statIcon} />
-              <Text style={styles.statValue}>{stats.totalTrips}</Text>
               <Text style={styles.statLabel}>Trips</Text>
+              <Text style={styles.statValue}>{stats.totalTrips}</Text>
             </View>
             <View style={styles.statCard}>
-              <Ionicons name="water" size={24} color="#f59e0b" style={styles.statIcon} />
-              <Text style={styles.statValue}>${stats.totalFuelCost}</Text>
-              <Text style={styles.statLabel}>Fuel Cost</Text>
-            </View>
-            <View style={styles.statCard}>
-              <Ionicons name="construct" size={24} color="#8b5cf6" style={styles.statIcon} />
-              <Text style={styles.statValue}>${stats.totalMaintenanceCost}</Text>
-              <Text style={styles.statLabel}>Maintenance</Text>
+              <Text style={styles.statLabel}>Miles travelled</Text>
+              <Text style={styles.statValue}>1,247</Text>
             </View>
           </View>
 
@@ -124,7 +114,6 @@ export default function DashboardScreen({ navigation }: any) {
     </View>
   );
 }
-
 const styles = StyleSheet.create({
   container: {
     flex: 1,
@@ -132,62 +121,59 @@ const styles = StyleSheet.create({
   },
 
   header: {
-    backgroundColor: '#2563eb',
+    backgroundColor: 'transparent',
     paddingTop: 48,
     paddingBottom: 16,
     paddingHorizontal: 16,
     flexDirection: 'row',
     alignItems: 'center',
+    justifyContent: 'space-between',
   },
 
   headerContent: {
     flex: 1,
   },
   headerTitle: {
-    color: 'white',
+    color: '#1f2937',
     fontSize: 24,
     fontWeight: 'bold',
   },
-  headerSubtitle: {
-    color: '#dbeafe',
-    fontSize: 16,
+  notificationButton: {
+    padding: 8,
   },
   scrollView: {
     flex: 1,
     paddingHorizontal: 16,
     paddingTop: 16,
   },
-  statsGrid: {
+  statsRow: {
     flexDirection: 'row',
-    flexWrap: 'wrap',
-    gap: 12,
+    justifyContent: 'space-between',
     marginBottom: 24,
+    gap: 8,
   },
   statCard: {
     backgroundColor: 'white',
     borderRadius: 12,
     padding: 16,
-    width: '47%',
-    alignItems: 'center',
+    flex: 1,
+    alignItems: 'flex-start',
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.1,
     shadowRadius: 3.84,
     elevation: 5,
   },
-  statIcon: {
-    fontSize: 24,
-    marginBottom: 8,
-  },
   statValue: {
-    fontSize: 24,
+    fontSize: 28,
     fontWeight: 'bold',
     color: '#1f2937',
-    marginBottom: 4,
+    marginTop: 4,
   },
   statLabel: {
     fontSize: 14,
     color: '#6b7280',
+    fontWeight: '500',
   },
   section: {
     marginBottom: 24,
