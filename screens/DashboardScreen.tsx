@@ -220,7 +220,7 @@ const styles = StyleSheet.create({
   },
   statCard: {
     backgroundColor: 'white',
-    borderRadius: 12,
+    borderRadius: 18,
     padding: 16,
     flex: 1,
     alignItems: 'flex-start',
@@ -241,7 +241,7 @@ const styles = StyleSheet.create({
   },
   vehicleCard: {
     backgroundColor: 'white',
-    borderRadius: 12,
+    borderRadius: 18,
     padding: 16,
   },
   vehicleHeader: {
@@ -404,7 +404,7 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     backgroundColor: 'white',
-    borderRadius: 8,
+    borderRadius: 18,
     padding: 16,
     marginBottom: 8,
   },
