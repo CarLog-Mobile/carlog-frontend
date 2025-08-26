@@ -1,11 +1,13 @@
-import React, { useState } from 'react';
-import { View, Text, TouchableOpacity, ScrollView, TextInput, Alert, StyleSheet, Dimensions, Modal } from 'react-native';
+import React, { useState, useEffect } from 'react';
+import { View, Text, TouchableOpacity, ScrollView, TextInput, Alert, StyleSheet, Dimensions, Modal, ActivityIndicator } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
+import { fuelApi } from '../services/api';
 
 const { width } = Dimensions.get('window');
 
 interface FuelEntry {
   id: string;
+  carId: string;
   date: string;
   liters: number;
   costPerLiter: number;
@@ -15,28 +17,11 @@ interface FuelEntry {
 }
 
 export default function FuelScreen({ navigation, route }: any) {
-  const [fuelEntries, setFuelEntries] = useState<FuelEntry[]>([
-    {
-      id: '1',
-      date: '2024-01-15',
-      liters: 45.0,
-      costPerLiter: 350.00,
-      totalCost: 15750.00,
-      mileage: 72420,
-      fuelType: '92 Octane'
-    },
-    {
-      id: '2',
-      date: '2024-01-08',
-      liters: 42.5,
-      costPerLiter: 345.00,
-      totalCost: 14662.50,
-      mileage: 72000,
-      fuelType: '92 Octane'
-    }
-  ]);
-
+  const [fuelEntries, setFuelEntries] = useState<FuelEntry[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
   const [showAddModal, setShowAddModal] = useState(false);
+  const [addingEntry, setAddingEntry] = useState(false);
   const [newEntry, setNewEntry] = useState({
     liters: '',
     costPerLiter: '',
@@ -44,38 +29,79 @@ export default function FuelScreen({ navigation, route }: any) {
     fuelType: '92 Octane'
   });
 
-  const addFuelEntry = () => {
+  // Load fuel entries from API when component mounts
+  useEffect(() => {
+    loadFuelEntries();
+  }, []);
+
+  const loadFuelEntries = async () => {
+    try {
+      setLoading(true);
+      setError(null);
+      const data = await fuelApi.getAll(route.params?.carId);
+      setFuelEntries(data);
+    } catch (err) {
+      // Don't show error for empty data, just set empty array
+      console.error('Error loading fuel entries:', err);
+      setFuelEntries([]);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const addFuelEntry = async () => {
     if (!newEntry.liters || !newEntry.costPerLiter || !newEntry.mileage) {
       Alert.alert('Error', 'Please fill in all required fields');
       return;
     }
 
-    const liters = parseFloat(newEntry.liters);
-    const costPerLiter = parseFloat(newEntry.costPerLiter);
-    const totalCost = liters * costPerLiter;
+    try {
+      setAddingEntry(true);
+      const liters = parseFloat(newEntry.liters);
+      const costPerLiter = parseFloat(newEntry.costPerLiter);
+      const totalCost = liters * costPerLiter;
 
-    const entry: FuelEntry = {
-      id: Date.now().toString(),
-      date: new Date().toISOString().split('T')[0],
-      liters,
-      costPerLiter,
-      totalCost,
-      mileage: parseFloat(newEntry.mileage),
-      fuelType: newEntry.fuelType
-    };
+      const entryData = {
+        carId: route.params?.carId || '1',
+        date: new Date().toISOString().split('T')[0],
+        liters,
+        costPerLiter,
+        totalCost,
+        mileage: parseFloat(newEntry.mileage),
+        fuelType: newEntry.fuelType
+      };
 
-    setFuelEntries([entry, ...fuelEntries]);
-    setNewEntry({ liters: '', costPerLiter: '', mileage: '', fuelType: '92 Octane' });
-    setShowAddModal(false);
+      const newEntryResponse = await fuelApi.create(entryData);
+      setFuelEntries([newEntryResponse, ...fuelEntries]);
+      setNewEntry({ liters: '', costPerLiter: '', mileage: '', fuelType: '92 Octane' });
+      setShowAddModal(false);
+    } catch (err) {
+      Alert.alert('Error', 'Network error');
+      console.error('Error adding fuel entry:', err);
+    } finally {
+      setAddingEntry(false);
+    }
   };
 
-  const deleteEntry = (id: string) => {
+  const deleteEntry = async (id: string) => {
     Alert.alert(
       'Delete Entry',
       'Are you sure you want to delete this fuel entry?',
       [
         { text: 'Cancel', style: 'cancel' },
-        { text: 'Delete', style: 'destructive', onPress: () => setFuelEntries(fuelEntries.filter(entry => entry.id !== id)) }
+        { 
+          text: 'Delete', 
+          style: 'destructive', 
+          onPress: async () => {
+                         try {
+               await fuelApi.delete(id);
+               setFuelEntries(fuelEntries.filter(entry => entry.id !== id));
+             } catch (err) {
+               Alert.alert('Error', 'Network error');
+               console.error('Error deleting fuel entry:', err);
+             }
+          }
+        }
       ]
     );
   };
@@ -123,6 +149,25 @@ export default function FuelScreen({ navigation, route }: any) {
 
   const efficiencyData = calculateFuelEfficiency();
   const monthlyCosts = calculateMonthlyCosts();
+
+  // Show loading state
+  if (loading) {
+    return (
+      <View style={styles.container}>
+        <View style={styles.header}>
+          <View style={styles.headerContent}>
+            <Text style={styles.headerTitle}>Fuel Logs</Text>
+          </View>
+        </View>
+        <View style={styles.loadingContainer}>
+          <ActivityIndicator size="large" color="#059669" />
+          <Text style={styles.loadingText}>Loading fuel entries...</Text>
+        </View>
+      </View>
+    );
+  }
+
+
 
   return (
     <View style={styles.container}>
@@ -213,46 +258,57 @@ export default function FuelScreen({ navigation, route }: any) {
         </View>
 
         {/* Fuel Entries */}
-        {fuelEntries.map((entry) => (
-          <TouchableOpacity
-            key={entry.id}
-            style={styles.fuelCard}
-            onPress={() => navigation.navigate('Maintenance', { fuelEntryId: entry.id })}
-          >
-            <View style={styles.fuelCardContent}>
-              <View style={styles.fuelInfo}>
-                <View style={styles.fuelHeader}>
-                  <Text style={styles.fuelDate}>{entry.date}</Text>
+        {fuelEntries.length === 0 ? (
+          <View style={styles.emptyContainer}>
+            <Ionicons name="water-outline" size={64} color="#9ca3af" />
+            <Text style={styles.emptyText}>No fuel entries yet</Text>
+            <Text style={styles.emptySubtext}>Add your first fuel entry to get started</Text>
+            <TouchableOpacity style={styles.addFirstButton} onPress={() => setShowAddModal(true)}>
+              <Text style={styles.addFirstButtonText}>Add First Entry</Text>
+            </TouchableOpacity>
+          </View>
+        ) : (
+          fuelEntries.map((entry) => (
+            <TouchableOpacity
+              key={entry.id}
+              style={styles.fuelCard}
+              onPress={() => navigation.navigate('Maintenance', { fuelEntryId: entry.id })}
+            >
+              <View style={styles.fuelCardContent}>
+                <View style={styles.fuelInfo}>
+                  <View style={styles.fuelHeader}>
+                    <Text style={styles.fuelDate}>{entry.date}</Text>
+                  </View>
+                                     <View style={styles.fuelDetails}>
+                     <View style={styles.fuelDetail}>
+                       <Ionicons name="water" size={14} color="#9ca3af" />
+                       <Text style={styles.fuelDetailText}>{(entry.liters || 0)} L</Text>
+                     </View>
+                     <View style={styles.fuelDetail}>
+                       <Ionicons name="card" size={14} color="#9ca3af" />
+                       <Text style={styles.fuelDetailText}>LKR {(entry.costPerLiter || 0)}/L</Text>
+                     </View>
+                     <View style={styles.fuelDetail}>
+                       <Ionicons name="cash" size={14} color="#9ca3af" />
+                       <Text style={styles.fuelDetailText}>LKR {(entry.totalCost || 0).toFixed(2)}</Text>
+                     </View>
+                     <View style={styles.fuelDetail}>
+                       <Ionicons name="speedometer" size={14} color="#9ca3af" />
+                       <Text style={styles.fuelDetailText}>{(entry.mileage || 0)} km</Text>
+                     </View>
+                   </View>
+                   <Text style={styles.fuelType}>{entry.fuelType || 'Not specified'}</Text>
                 </View>
-                <View style={styles.fuelDetails}>
-                  <View style={styles.fuelDetail}>
-                    <Ionicons name="water" size={14} color="#9ca3af" />
-                    <Text style={styles.fuelDetailText}>{entry.liters} L</Text>
-                  </View>
-                  <View style={styles.fuelDetail}>
-                    <Ionicons name="card" size={14} color="#9ca3af" />
-                    <Text style={styles.fuelDetailText}>LKR {entry.costPerLiter}/L</Text>
-                  </View>
-                  <View style={styles.fuelDetail}>
-                    <Ionicons name="cash" size={14} color="#9ca3af" />
-                    <Text style={styles.fuelDetailText}>LKR {entry.totalCost.toFixed(2)}</Text>
-                  </View>
-                  <View style={styles.fuelDetail}>
-                    <Ionicons name="speedometer" size={14} color="#9ca3af" />
-                    <Text style={styles.fuelDetailText}>{entry.mileage} km</Text>
-                  </View>
-                </View>
-                <Text style={styles.fuelType}>{entry.fuelType}</Text>
+                <TouchableOpacity
+                  onPress={() => deleteEntry(entry.id)}
+                  style={styles.deleteButton}
+                >
+                  <Ionicons name="trash-outline" size={14} color="white" />
+                </TouchableOpacity>
               </View>
-              <TouchableOpacity
-                onPress={() => deleteEntry(entry.id)}
-                style={styles.deleteButton}
-              >
-                <Ionicons name="trash-outline" size={14} color="white" />
-              </TouchableOpacity>
-            </View>
-          </TouchableOpacity>
-        ))}
+            </TouchableOpacity>
+          ))
+        )}
       </ScrollView>
 
       {/* Add Fuel Modal */}
@@ -324,14 +380,20 @@ export default function FuelScreen({ navigation, route }: any) {
               <TouchableOpacity
                 style={styles.cancelButton}
                 onPress={() => setShowAddModal(false)}
+                disabled={addingEntry}
               >
                 <Text style={styles.cancelButtonText}>Cancel</Text>
               </TouchableOpacity>
               <TouchableOpacity
-                style={styles.addButton}
+                style={[styles.addButton, addingEntry && styles.addButtonDisabled]}
                 onPress={addFuelEntry}
+                disabled={addingEntry}
               >
-                <Text style={styles.addButtonText}>Add Entry</Text>
+                {addingEntry ? (
+                  <ActivityIndicator size="small" color="white" />
+                ) : (
+                  <Text style={styles.addButtonText}>Add Entry</Text>
+                )}
               </TouchableOpacity>
             </View>
           </View>
@@ -397,6 +459,74 @@ const styles = StyleSheet.create({
     flex: 1,
     paddingHorizontal: 16,
     paddingTop: 16,
+  },
+
+  // Loading and Error States
+  loadingContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    paddingHorizontal: 20,
+  },
+  loadingText: {
+    marginTop: 16,
+    fontSize: 16,
+    color: '#6b7280',
+  },
+  errorContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    paddingHorizontal: 20,
+  },
+  errorText: {
+    marginTop: 16,
+    fontSize: 16,
+    color: '#ef4444',
+    textAlign: 'center',
+    marginBottom: 24,
+  },
+  retryButton: {
+    backgroundColor: '#059669',
+    paddingHorizontal: 24,
+    paddingVertical: 12,
+    borderRadius: 8,
+  },
+  retryButtonText: {
+    color: 'white',
+    fontWeight: '600',
+    fontSize: 16,
+  },
+  emptyContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    paddingHorizontal: 20,
+    paddingVertical: 60,
+  },
+  emptyText: {
+    marginTop: 16,
+    fontSize: 20,
+    fontWeight: '600',
+    color: '#374151',
+  },
+  emptySubtext: {
+    marginTop: 8,
+    fontSize: 16,
+    color: '#6b7280',
+    textAlign: 'center',
+    marginBottom: 24,
+  },
+  addFirstButton: {
+    backgroundColor: '#059669',
+    paddingHorizontal: 24,
+    paddingVertical: 12,
+    borderRadius: 8,
+  },
+  addFirstButtonText: {
+    color: 'white',
+    fontWeight: '600',
+    fontSize: 16,
   },
 
   // Charts Section
@@ -607,6 +737,11 @@ const styles = StyleSheet.create({
     backgroundColor: '#059669',
     paddingVertical: 16,
     borderRadius: 12,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  addButtonDisabled: {
+    backgroundColor: '#9ca3af',
   },
   addButtonText: {
     color: 'white',
@@ -621,6 +756,8 @@ const styles = StyleSheet.create({
     borderRadius: 12,
     borderWidth: 1,
     borderColor: '#e5e7eb',
+    alignItems: 'center',
+    justifyContent: 'center',
   },
   cancelButtonText: {
     color: '#374151',

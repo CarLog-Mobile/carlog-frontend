@@ -40,8 +40,9 @@ export default function TripsScreen({ navigation, route }: any) {
       const data = await tripsApi.getAll(route.params?.carId);
       setTrips(data);
     } catch (err) {
-      setError('Couldn\'t fetch');
+      // Don't show error for empty data, just set empty array
       console.error('Error loading trips:', err);
+      setTrips([]);
     } finally {
       setLoading(false);
     }
@@ -69,7 +70,7 @@ export default function TripsScreen({ navigation, route }: any) {
       setNewTrip({ startLocation: '', endLocation: '', distance: '', duration: '' });
       setShowAddModal(false);
     } catch (err) {
-      Alert.alert('Error', 'Couldn\'t fetch');
+      Alert.alert('Error', 'Network error');
       console.error('Error adding trip:', err);
     } finally {
       setAddingTrip(false);
@@ -86,13 +87,13 @@ export default function TripsScreen({ navigation, route }: any) {
           text: 'Delete', 
           style: 'destructive', 
           onPress: async () => {
-            try {
-              await tripsApi.delete(id);
-              setTrips(trips.filter(trip => trip.id !== id));
-            } catch (err) {
-              Alert.alert('Error', 'Couldn\'t fetch');
-              console.error('Error deleting trip:', err);
-            }
+                         try {
+               await tripsApi.delete(id);
+               setTrips(trips.filter(trip => trip.id !== id));
+             } catch (err) {
+               Alert.alert('Error', 'Network error');
+               console.error('Error deleting trip:', err);
+             }
           }
         }
       ]
@@ -149,33 +150,7 @@ export default function TripsScreen({ navigation, route }: any) {
     );
   }
 
-  // Show error state
-  if (error) {
-    return (
-      <View style={styles.container}>
-        <View style={styles.header}>
-          <View style={styles.headerContent}>
-            <Text style={styles.headerTitle}>Trip Logs</Text>
-          </View>
-          <View style={styles.headerActions}>
-            <TouchableOpacity style={styles.iconButton} onPress={() => navigation.goBack()}>
-              <Ionicons name="arrow-back" size={20} color="#1f2937" />
-            </TouchableOpacity>
-            <TouchableOpacity style={styles.iconButton} onPress={loadTrips}>
-              <Ionicons name="refresh" size={20} color="#1f2937" />
-            </TouchableOpacity>
-          </View>
-        </View>
-        <View style={styles.errorContainer}>
-          <Ionicons name="alert-circle" size={48} color="#ef4444" />
-          <Text style={styles.errorText}>{error}</Text>
-          <TouchableOpacity style={styles.retryButton} onPress={loadTrips}>
-            <Text style={styles.retryButtonText}>Retry</Text>
-          </TouchableOpacity>
-        </View>
-      </View>
-    );
-  }
+
 
   return (
     <View style={styles.container}>
@@ -239,20 +214,20 @@ export default function TripsScreen({ navigation, route }: any) {
             <View style={styles.statsContainer}>
               <View style={styles.statItem}>
                 <Text style={styles.statLabel}>Total Distance</Text>
-                <Text style={styles.statValue}>{tripStats.totalDistance.toFixed(1)} km</Text>
-              </View>
-              <View style={styles.statItem}>
-                <Text style={styles.statLabel}>Avg Distance</Text>
-                <Text style={styles.statValue}>{tripStats.avgDistance.toFixed(1)} km</Text>
-              </View>
-              <View style={styles.statItem}>
-                <Text style={styles.statLabel}>Total Duration</Text>
-                <Text style={styles.statValue}>{tripStats.totalDuration.toFixed(0)} min</Text>
-              </View>
-              <View style={styles.statItem}>
-                <Text style={styles.statLabel}>Avg Duration</Text>
-                <Text style={styles.statValue}>{tripStats.avgDuration.toFixed(0)} min</Text>
-              </View>
+                               <Text style={styles.statValue}>{(tripStats.totalDistance || 0).toFixed(1)} km</Text>
+             </View>
+             <View style={styles.statItem}>
+               <Text style={styles.statLabel}>Avg Distance</Text>
+               <Text style={styles.statValue}>{(tripStats.avgDistance || 0).toFixed(1)} km</Text>
+             </View>
+             <View style={styles.statItem}>
+               <Text style={styles.statLabel}>Total Duration</Text>
+               <Text style={styles.statValue}>{(tripStats.totalDuration || 0).toFixed(0)} min</Text>
+             </View>
+             <View style={styles.statItem}>
+               <Text style={styles.statLabel}>Avg Duration</Text>
+               <Text style={styles.statValue}>{(tripStats.avgDuration || 0).toFixed(0)} min</Text>
+             </View>
             </View>
           </View>
         </View>
@@ -284,16 +259,16 @@ export default function TripsScreen({ navigation, route }: any) {
                     <Ionicons name="arrow-forward" size={16} color="#9ca3af" style={styles.tripArrow} />
                     <Text style={styles.tripLocation}>{trip.endLocation}</Text>
                   </View>
-                  <View style={styles.tripDetails}>
-                    <View style={styles.tripDetail}>
-                      <Ionicons name="speedometer" size={14} color="#9ca3af" />
-                      <Text style={styles.tripDetailText}>{trip.distance} km</Text>
-                    </View>
-                    <View style={styles.tripDetail}>
-                      <Ionicons name="time" size={14} color="#9ca3af" />
-                      <Text style={styles.tripDetailText}>{trip.duration} min</Text>
-                    </View>
-                  </View>
+                                     <View style={styles.tripDetails}>
+                     <View style={styles.tripDetail}>
+                       <Ionicons name="speedometer" size={14} color="#9ca3af" />
+                       <Text style={styles.tripDetailText}>{(trip.distance || 0)} km</Text>
+                     </View>
+                     <View style={styles.tripDetail}>
+                       <Ionicons name="time" size={14} color="#9ca3af" />
+                       <Text style={styles.tripDetailText}>{(trip.duration || 0)} min</Text>
+                     </View>
+                   </View>
                 </View>
                 <TouchableOpacity
                   onPress={() => deleteTrip(trip.id)}

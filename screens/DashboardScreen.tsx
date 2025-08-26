@@ -1,6 +1,7 @@
-import React, { useState } from 'react';
-import { View, Text, TouchableOpacity, ScrollView, StyleSheet, Dimensions } from 'react-native';
+import React, { useState, useEffect } from 'react';
+import { View, Text, TouchableOpacity, ScrollView, StyleSheet, Dimensions, ActivityIndicator } from 'react-native';
 import { Ionicons, MaterialIcons, FontAwesome5 } from '@expo/vector-icons';
+import { carsApi, tripsApi, fuelApi, dashboardApi } from '../services/api';
 
 const { width } = Dimensions.get('window');
 
@@ -13,32 +14,218 @@ interface DashboardStats {
   thisMonthTrips: number;
 }
 
+interface Car {
+  id: string;
+  make: string;
+  model: string;
+  year: string;
+  licensePlate: string;
+  mileage: number;
+  fuelType: string;
+}
+
+interface Trip {
+  id: string;
+  carId: string;
+  date: string;
+  startLocation: string;
+  endLocation: string;
+  distance: number;
+  duration: number;
+}
+
+interface FuelEntry {
+  id: string;
+  carId: string;
+  date: string;
+  liters: number;
+  costPerLiter: number;
+  totalCost: number;
+  mileage: number;
+  fuelType: string;
+}
+
 export default function DashboardScreen({ navigation }: any) {
-  
-  const stats: DashboardStats = {
-    totalCars: 2,
-    totalTrips: 15,
-    totalFuelCost: 245.50,
-    totalMaintenanceCost: 180.00,
-    averageMPG: 28.5,
-    thisMonthTrips: 8
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+  const [cars, setCars] = useState<Car[]>([]);
+  const [trips, setTrips] = useState<Trip[]>([]);
+  const [fuelEntries, setFuelEntries] = useState<FuelEntry[]>([]);
+  const [selectedCar, setSelectedCar] = useState<Car | null>(null);
+  const [stats, setStats] = useState<DashboardStats>({
+    totalCars: 0,
+    totalTrips: 0,
+    totalFuelCost: 0,
+    totalMaintenanceCost: 0,
+    averageMPG: 0,
+    thisMonthTrips: 0
+  });
+
+  // Load dashboard data when component mounts
+  useEffect(() => {
+    loadDashboardData();
+  }, []);
+
+  const loadDashboardData = async () => {
+    try {
+      setLoading(true);
+      setError(null);
+
+      // Load all data in parallel
+      const [carsData, tripsData, fuelData] = await Promise.all([
+        carsApi.getAll(),
+        tripsApi.getAll(),
+        fuelApi.getAll()
+      ]);
+
+      setCars(carsData || []);
+      setTrips(tripsData || []);
+      setFuelEntries(fuelData || []);
+
+      // Set selected car (first car if available)
+      if (carsData && carsData.length > 0) {
+        setSelectedCar(carsData[0]);
+      }
+
+      // Calculate stats with null safety
+      const totalFuelCost = (fuelData || []).reduce((sum: number, entry: FuelEntry) => sum + (entry.totalCost || 0), 0);
+      const totalDistance = (tripsData || []).reduce((sum: number, trip: Trip) => sum + (trip.distance || 0), 0);
+      const thisMonth = new Date().getMonth();
+      const thisMonthTrips = (tripsData || []).filter((trip: Trip) => {
+        const tripMonth = new Date(trip.date).getMonth();
+        return tripMonth === thisMonth;
+      }).length;
+
+      setStats({
+        totalCars: (carsData || []).length,
+        totalTrips: (tripsData || []).length,
+        totalFuelCost,
+        totalMaintenanceCost: 0, // TODO: Add maintenance API
+        averageMPG: totalDistance > 0 ? totalDistance / (totalFuelCost / 100) : 0, // Rough calculation
+        thisMonthTrips
+      });
+
+    } catch (err) {
+      // Don't show error for empty data, just set empty arrays
+      console.error('Error loading dashboard data:', err);
+      setCars([]);
+      setTrips([]);
+      setFuelEntries([]);
+      setSelectedCar(null);
+      setStats({
+        totalCars: 0,
+        totalTrips: 0,
+        totalFuelCost: 0,
+        totalMaintenanceCost: 0,
+        averageMPG: 0,
+        thisMonthTrips: 0
+      });
+    } finally {
+      setLoading(false);
+    }
   };
 
   const quickActions = [
-    { title: 'Fuel', icon: 'water' as const, onPress: () => navigation.navigate('Fuel') },
-    { title: 'Trips', icon: 'map' as const, onPress: () => navigation.navigate('Trips') },
-    { title: 'Repair', icon: 'construct' as const, onPress: () => navigation.navigate('Maintenance') },
+    { title: 'Fuel', icon: 'water' as const, onPress: () => navigation.navigate('Fuel', { carId: selectedCar?.id }) },
+    { title: 'Trips', icon: 'map' as const, onPress: () => navigation.navigate('Trips', { carId: selectedCar?.id }) },
+    { title: 'Repair', icon: 'construct' as const, onPress: () => navigation.navigate('Maintenance', { carId: selectedCar?.id }) },
     { title: 'OBD', icon: 'scan' as const, onPress: () => navigation.navigate('OBDLive') },
   ];
 
-  const recentActivity = [
-    { type: 'trip', title: 'Home → Work', time: '2 hours ago', icon: 'car' as const, color: '#3b82f6' },
-    { type: 'fuel', title: 'Fuel refill - Rs.345.20', time: '1 day ago', icon: 'water' as const, color: '#f59e0b' },
-    { type: 'maintenance', title: 'Oil change completed', time: '3 days ago', icon: 'construct' as const, color: '#8b5cf6' },
-    { type: 'trip', title: 'Grocery store run', time: '1 week ago', icon: 'car' as const, color: '#3b82f6' },
-  ];
+  // Generate recent activity from trips and fuel entries
+  const generateRecentActivity = () => {
+    const activities = [];
 
+    // Add recent trips
+    const recentTrips = (trips || [])
+      .sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime())
+      .slice(0, 3)
+      .map(trip => ({
+        type: 'trip',
+        title: `${trip.startLocation || 'Unknown'} → ${trip.endLocation || 'Unknown'}`,
+        time: getTimeAgo(new Date(trip.date)),
+        icon: 'car' as const,
+        color: '#3b82f6'
+      }));
 
+    // Add recent fuel entries
+    const recentFuel = (fuelEntries || [])
+      .sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime())
+      .slice(0, 3)
+      .map(entry => ({
+        type: 'fuel',
+        title: `Fuel refill - LKR ${(entry.totalCost || 0).toFixed(2)}`,
+        time: getTimeAgo(new Date(entry.date)),
+        icon: 'water' as const,
+        color: '#f59e0b'
+      }));
+
+    // Combine and sort by date
+    const allActivities = [...recentTrips, ...recentFuel]
+      .sort((a, b) => {
+        const aTime = new Date(a.time.includes('ago') ? a.time : a.time).getTime();
+        const bTime = new Date(b.time.includes('ago') ? b.time : b.time).getTime();
+        return bTime - aTime;
+      })
+      .slice(0, 4);
+
+    return allActivities;
+  };
+
+  const getTimeAgo = (date: Date) => {
+    const now = new Date();
+    const diffInHours = Math.floor((now.getTime() - date.getTime()) / (1000 * 60 * 60));
+    
+    if (diffInHours < 1) return 'Just now';
+    if (diffInHours < 24) return `${diffInHours} hours ago`;
+    if (diffInHours < 48) return '1 day ago';
+    if (diffInHours < 168) return `${Math.floor(diffInHours / 24)} days ago`;
+    return `${Math.floor(diffInHours / 24 / 7)} weeks ago`;
+  };
+
+  const recentActivity = generateRecentActivity();
+
+  // Show loading state
+  if (loading) {
+    return (
+      <View style={styles.container}>
+        <View style={styles.header}>
+          <View style={styles.headerContent}>
+            <Text style={styles.headerTitle}>Dashboard</Text>
+          </View>
+        </View>
+        <View style={styles.loadingContainer}>
+          <ActivityIndicator size="large" color="#059669" />
+          <Text style={styles.loadingText}>Loading dashboard...</Text>
+        </View>
+      </View>
+    );
+  }
+
+  // Show error state only for actual network errors
+  if (error) {
+    return (
+      <View style={styles.container}>
+        <View style={styles.header}>
+          <View style={styles.headerContent}>
+            <Text style={styles.headerTitle}>Dashboard</Text>
+          </View>
+          <View style={styles.headerActions}>
+            <TouchableOpacity style={styles.iconButton} onPress={loadDashboardData}>
+              <Ionicons name="refresh" size={20} color="#1f2937" />
+            </TouchableOpacity>
+          </View>
+        </View>
+        <View style={styles.errorContainer}>
+          <Ionicons name="alert-circle" size={48} color="#ef4444" />
+          <Text style={styles.errorText}>Network connection issue</Text>
+          <TouchableOpacity style={styles.retryButton} onPress={loadDashboardData}>
+            <Text style={styles.retryButtonText}>Retry</Text>
+          </TouchableOpacity>
+        </View>
+      </View>
+    );
+  }
 
   return (
     <View style={styles.container}>
@@ -60,20 +247,21 @@ export default function DashboardScreen({ navigation }: any) {
         </View>
       </View>
 
-        <ScrollView style={styles.scrollView}>
-          {/* Stats Cards */}
-          <View style={styles.statsRow}>
-            <View style={styles.statCard}>
-              <Text style={styles.statLabel}>Trips</Text>
-              <Text style={styles.statValue}>{stats.totalTrips}</Text>
-            </View>
-            <View style={styles.statCard}>
-              <Text style={styles.statLabel}>Miles travelled</Text>
-              <Text style={styles.statValue}>1,247</Text>
-            </View>
-          </View>
+      <ScrollView style={styles.scrollView}>
+                 {/* Stats Cards */}
+         <View style={styles.statsRow}>
+           <View style={styles.statCard}>
+             <Text style={styles.statLabel}>Trips</Text>
+             <Text style={styles.statValue}>{stats.totalTrips || 0}</Text>
+           </View>
+           <View style={styles.statCard}>
+             <Text style={styles.statLabel}>Total Distance</Text>
+             <Text style={styles.statValue}>{(trips || []).length > 0 ? `${(trips || []).reduce((sum, trip) => sum + (trip.distance || 0), 0).toFixed(0)} km` : '0 km'}</Text>
+           </View>
+         </View>
 
-          {/* Currently Selected Vehicle */}
+                 {/* Currently Selected Vehicle - Only show if there are cars */}
+         {(cars || []).length > 0 && selectedCar && (
           <View style={styles.vehicleSection}>
             <View style={styles.vehicleHeader}>
               <Text style={styles.vehicleHeaderTitle}>Currently Selected</Text>
@@ -84,9 +272,9 @@ export default function DashboardScreen({ navigation }: any) {
             <View style={styles.vehicleCard}>
               <View style={styles.vehicleContent}>
                 <View style={styles.vehicleInfo}>
-                  <Text style={styles.vehicleName}>Toyota Camry</Text>
-                  <Text style={styles.vehicleYear}>2022</Text>
-                  <Text style={styles.vehiclePlate}>ABC-1234</Text>
+                                     <Text style={styles.vehicleName}>{selectedCar.make || 'Unknown'} {selectedCar.model || 'Unknown'}</Text>
+                   <Text style={styles.vehicleYear}>{selectedCar.year || 'Unknown'}</Text>
+                   <Text style={styles.vehiclePlate}>{selectedCar.licensePlate || 'Not specified'}</Text>
                   <TouchableOpacity style={styles.detailsButton} onPress={() => navigation.navigate('Cars')}>
                     <Ionicons name="eye-outline" size={16} color="#1f2937" />
                     <Text style={styles.detailsButtonText}>Details</Text>
@@ -100,33 +288,45 @@ export default function DashboardScreen({ navigation }: any) {
               </View>
             </View>
           </View>
+        )}
 
-          {/* Quick Actions */}
-          <View style={styles.section}>
+                 {/* No Cars Message */}
+         {(cars || []).length === 0 && (
+          <View style={styles.emptyContainer}>
+            <Ionicons name="car-outline" size={64} color="#9ca3af" />
+            <Text style={styles.emptyText}>No vehicles yet</Text>
+            <Text style={styles.emptySubtext}>Add your first car to get started</Text>
+            <TouchableOpacity style={styles.addFirstButton} onPress={() => navigation.navigate('Cars')}>
+              <Text style={styles.addFirstButtonText}>Add First Car</Text>
+            </TouchableOpacity>
+          </View>
+        )}
+
+                 {/* Quick Actions */}
+         <View style={styles.section}>
             <View style={styles.sectionHeader}>
               <Text style={styles.sectionTitle}>Quick Actions</Text>
               <TouchableOpacity onPress={() => navigation.navigate('Cars')}>
                 <Text style={styles.viewAllText}>View all</Text>
               </TouchableOpacity>
             </View>
-                                                   <View style={styles.quickActionsGrid}>
-                {quickActions.map((action, index) => (
-                  <View key={index} style={styles.quickActionContainer}>
-                    <TouchableOpacity
-                      style={styles.quickActionCard}
-                      onPress={action.onPress}
-                    >
-                      <Ionicons name={action.icon} size={36} color="#0656E0" style={styles.quickActionIcon} />
-                    </TouchableOpacity>
-                    <Text style={styles.quickActionText}>{action.title}</Text>
-                  </View>
-                ))}
-              </View>
+            <View style={styles.quickActionsGrid}>
+              {quickActions.map((action, index) => (
+                <View key={index} style={styles.quickActionContainer}>
+                  <TouchableOpacity
+                    style={styles.quickActionCard}
+                    onPress={action.onPress}
+                  >
+                    <Ionicons name={action.icon} size={36} color="#0656E0" style={styles.quickActionIcon} />
+                  </TouchableOpacity>
+                  <Text style={styles.quickActionText}>{action.title}</Text>
+                </View>
+              ))}
+            </View>
           </View>
 
-
-
-          {/* Recent Activity */}
+                 {/* Recent Activity - Only show if there are activities */}
+         {(recentActivity || []).length > 0 && (
           <View style={styles.section}>
             <View style={styles.sectionHeader}>
               <Text style={styles.sectionTitle}>Recent Activity</Text>
@@ -144,10 +344,21 @@ export default function DashboardScreen({ navigation }: any) {
               </View>
             ))}
           </View>
-        </ScrollView>
+        )}
+
+                 {/* No Activity Message */}
+         {(recentActivity || []).length === 0 && (cars || []).length > 0 && (
+          <View style={styles.emptyActivityContainer}>
+            <Ionicons name="time-outline" size={48} color="#9ca3af" />
+            <Text style={styles.emptyActivityText}>No recent activity</Text>
+            <Text style={styles.emptyActivitySubtext}>Start adding trips and fuel entries to see activity here</Text>
+          </View>
+        )}
+      </ScrollView>
     </View>
   );
 }
+
 const styles = StyleSheet.create({
   container: {
     flex: 1,
@@ -199,6 +410,98 @@ const styles = StyleSheet.create({
     width: 36,
     height: 36,
   },
+
+  // Loading and Error States
+  loadingContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    paddingHorizontal: 20,
+  },
+  loadingText: {
+    marginTop: 16,
+    fontSize: 16,
+    color: '#6b7280',
+  },
+  errorContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    paddingHorizontal: 20,
+  },
+  errorText: {
+    marginTop: 16,
+    fontSize: 16,
+    color: '#ef4444',
+    textAlign: 'center',
+    marginBottom: 24,
+  },
+  retryButton: {
+    backgroundColor: '#059669',
+    paddingHorizontal: 24,
+    paddingVertical: 12,
+    borderRadius: 8,
+  },
+  retryButtonText: {
+    color: 'white',
+    fontWeight: '600',
+    fontSize: 16,
+  },
+
+  // Empty States
+  emptyContainer: {
+    backgroundColor: 'white',
+    borderRadius: 18,
+    padding: 32,
+    marginBottom: 24,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  emptyText: {
+    marginTop: 16,
+    fontSize: 20,
+    fontWeight: '600',
+    color: '#374151',
+  },
+  emptySubtext: {
+    marginTop: 8,
+    fontSize: 16,
+    color: '#6b7280',
+    textAlign: 'center',
+    marginBottom: 24,
+  },
+  addFirstButton: {
+    backgroundColor: '#059669',
+    paddingHorizontal: 24,
+    paddingVertical: 12,
+    borderRadius: 8,
+  },
+  addFirstButtonText: {
+    color: 'white',
+    fontWeight: '600',
+    fontSize: 16,
+  },
+  emptyActivityContainer: {
+    backgroundColor: 'white',
+    borderRadius: 18,
+    padding: 24,
+    marginBottom: 24,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  emptyActivityText: {
+    marginTop: 12,
+    fontSize: 18,
+    fontWeight: '600',
+    color: '#374151',
+  },
+  emptyActivitySubtext: {
+    marginTop: 4,
+    fontSize: 14,
+    color: '#6b7280',
+    textAlign: 'center',
+  },
+
   scrollView: {
     flex: 1,
     paddingHorizontal: 16,

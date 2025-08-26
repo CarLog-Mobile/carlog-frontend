@@ -17,17 +17,17 @@ const apiRequest = async (endpoint: string, options: RequestInit = {}) => {
     const response = await fetch(url, config);
     
     if (!response.ok) {
-      throw new Error('Couldn\'t fetch');
+      throw new Error('Network error');
     }
     
     return await response.json();
   } catch (error) {
     console.error('API request failed:', error);
-    throw new Error('Couldn\'t fetch');
+    throw new Error('Network error');
   }
 };
 
-// Cars API
+// Cars API - matches your endpoints
 export const carsApi = {
   getAll: () => apiRequest('/cars'),
   getById: (id: string) => apiRequest(`/cars/${id}`),
@@ -42,9 +42,19 @@ export const carsApi = {
   delete: (id: string) => apiRequest(`/cars/${id}`, {
     method: 'DELETE',
   }),
+  // Additional endpoints from your documentation
+  getByLicensePlate: (licensePlate: string) => apiRequest(`/cars/license-plate/${licensePlate}`),
+  getByMake: (make: string) => apiRequest(`/cars/make/${make}`),
+  getByMakeModel: (make: string, model: string) => apiRequest(`/cars/make/${make}/model/${model}`),
+  getByFuelType: (fuelType: string) => apiRequest(`/cars/fuel-type/${fuelType}`),
+  updateMileage: (id: string, mileage: number) => apiRequest(`/cars/${id}/mileage?newMileage=${mileage}`, {
+    method: 'PUT',
+  }),
+  checkExists: (id: string) => apiRequest(`/cars/exists/${id}`),
+  checkLicensePlateExists: (licensePlate: string) => apiRequest(`/cars/exists/license-plate/${licensePlate}`),
 };
 
-// Trips API
+// Trips API - matches your endpoints
 export const tripsApi = {
   getAll: (carId?: string) => {
     const params = carId ? `?carId=${carId}` : '';
@@ -62,11 +72,34 @@ export const tripsApi = {
   delete: (id: string) => apiRequest(`/trips/${id}`, {
     method: 'DELETE',
   }),
-  getStats: () => apiRequest('/trips/stats'),
-  getMonthlyDistance: () => apiRequest('/trips/monthly-distance'),
+  // Additional endpoints from your documentation
+  getByCar: (carId: string) => apiRequest(`/trips/car/${carId}`),
+  getByDate: (date: string) => apiRequest(`/trips/date/${date}`),
+  getByDateRange: (startDate: string, endDate: string) => apiRequest(`/trips/date-range?startDate=${startDate}&endDate=${endDate}`),
+  getByCarAndDateRange: (carId: string, startDate: string, endDate: string) => apiRequest(`/trips/car/${carId}/date-range?startDate=${startDate}&endDate=${endDate}`),
+  getStats: (carId?: string) => {
+    const params = carId ? `?carId=${carId}` : '';
+    return apiRequest(`/trips/stats${params}`);
+  },
+  getMonthlyDistance: (carId?: string) => {
+    const params = carId ? `?carId=${carId}` : '';
+    return apiRequest(`/trips/monthly-distance${params}`);
+  },
+  getRecentByCar: (carId: string, limit: number = 10) => apiRequest(`/trips/car/${carId}/recent?limit=${limit}`),
+  getTotalDistanceByCar: (carId: string) => apiRequest(`/trips/car/${carId}/total-distance`),
+  getTotalDurationByCar: (carId: string) => apiRequest(`/trips/car/${carId}/total-duration`),
+  getAverageDistanceByCar: (carId: string) => apiRequest(`/trips/car/${carId}/average-distance`),
+  updateDistance: (id: string, distance: number) => apiRequest(`/trips/${id}/distance?newDistance=${distance}`, {
+    method: 'PUT',
+  }),
+  updateDuration: (id: string, duration: number) => apiRequest(`/trips/${id}/duration?newDuration=${duration}`, {
+    method: 'PUT',
+  }),
+  checkExists: (id: string) => apiRequest(`/trips/exists/${id}`),
+  checkCarHasTrips: (carId: string) => apiRequest(`/trips/car/${carId}/has-trips`),
 };
 
-// Fuel API
+// Fuel API - matches your endpoints
 export const fuelApi = {
   getAll: (carId?: string) => {
     const params = carId ? `?carId=${carId}` : '';
@@ -84,11 +117,35 @@ export const fuelApi = {
   delete: (id: string) => apiRequest(`/fuel-entries/${id}`, {
     method: 'DELETE',
   }),
-  getEfficiency: () => apiRequest('/fuel-entries/efficiency'),
-  getMonthlyCosts: () => apiRequest('/fuel-entries/monthly-costs'),
+  // Additional endpoints from your documentation
+  getByCar: (carId: string) => apiRequest(`/fuel-entries/car/${carId}`),
+  getByDate: (date: string) => apiRequest(`/fuel-entries/date/${date}`),
+  getByDateRange: (startDate: string, endDate: string) => apiRequest(`/fuel-entries/date-range?startDate=${startDate}&endDate=${endDate}`),
+  getByCarAndDateRange: (carId: string, startDate: string, endDate: string) => apiRequest(`/fuel-entries/car/${carId}/date-range?startDate=${startDate}&endDate=${endDate}`),
+  getByFuelType: (fuelType: string) => apiRequest(`/fuel-entries/fuel-type/${fuelType}`),
+  getEfficiency: (carId?: string) => {
+    const params = carId ? `?carId=${carId}` : '';
+    return apiRequest(`/fuel-entries/efficiency${params}`);
+  },
+  getMonthlyCosts: (carId?: string) => {
+    const params = carId ? `?carId=${carId}` : '';
+    return apiRequest(`/fuel-entries/monthly-costs${params}`);
+  },
+  getRecentByCar: (carId: string, limit: number = 10) => apiRequest(`/fuel-entries/car/${carId}/recent?limit=${limit}`),
+  getTotalCostByCar: (carId: string) => apiRequest(`/fuel-entries/car/${carId}/total-cost`),
+  getTotalLitersByCar: (carId: string) => apiRequest(`/fuel-entries/car/${carId}/total-liters`),
+  getAverageCostPerLiterByCar: (carId: string) => apiRequest(`/fuel-entries/car/${carId}/average-cost-per-liter`),
+  updateCost: (id: string, cost: number) => apiRequest(`/fuel-entries/${id}/cost?newCost=${cost}`, {
+    method: 'PUT',
+  }),
+  updateLiters: (id: string, liters: number) => apiRequest(`/fuel-entries/${id}/liters?newLiters=${liters}`, {
+    method: 'PUT',
+  }),
+  checkExists: (id: string) => apiRequest(`/fuel-entries/exists/${id}`),
+  checkCarHasEntries: (carId: string) => apiRequest(`/fuel-entries/car/${carId}/has-entries`),
 };
 
-// Maintenance API
+// Maintenance API - matches your endpoints
 export const maintenanceApi = {
   getAll: (carId?: string) => {
     const params = carId ? `?carId=${carId}` : '';
@@ -106,17 +163,48 @@ export const maintenanceApi = {
   delete: (id: string) => apiRequest(`/maintenance/${id}`, {
     method: 'DELETE',
   }),
+  // Additional endpoints from your documentation
   markCompleted: (id: string) => apiRequest(`/maintenance/${id}/complete`, {
     method: 'PUT',
   }),
   getOverdue: () => apiRequest('/maintenance/overdue'),
+  getByCar: (carId: string) => apiRequest(`/maintenance/car/${carId}`),
+  getByStatus: (status: string) => apiRequest(`/maintenance/status/${status}`),
+  getByType: (type: string) => apiRequest(`/maintenance/type/${type}`),
+  getByDate: (date: string) => apiRequest(`/maintenance/date/${date}`),
+  getByDateRange: (startDate: string, endDate: string) => apiRequest(`/maintenance/date-range?startDate=${startDate}&endDate=${endDate}`),
+  getOverdueByCar: (carId: string) => apiRequest(`/maintenance/car/${carId}/overdue`),
+  getRecentByCar: (carId: string, limit: number = 10) => apiRequest(`/maintenance/car/${carId}/recent?limit=${limit}`),
+  getTotalCostByCar: (carId: string) => apiRequest(`/maintenance/car/${carId}/total-cost`),
+  updateCost: (id: string, cost: number) => apiRequest(`/maintenance/${id}/cost?newCost=${cost}`, {
+    method: 'PUT',
+  }),
+  updateMileage: (id: string, mileage: number) => apiRequest(`/maintenance/${id}/mileage?newMileage=${mileage}`, {
+    method: 'PUT',
+  }),
+  checkExists: (id: string) => apiRequest(`/maintenance/exists/${id}`),
+  checkCarHasItems: (carId: string) => apiRequest(`/maintenance/car/${carId}/has-items`),
 };
 
-// Dashboard API
+// Dashboard API - matches your endpoints
 export const dashboardApi = {
-  getStats: () => apiRequest('/dashboard/stats'),
-  getRecentActivity: () => apiRequest('/dashboard/recent-activity'),
-  getSelectedVehicle: () => apiRequest('/dashboard/selected-vehicle'),
+  getStats: (carId?: string) => {
+    const params = carId ? `?carId=${carId}` : '';
+    return apiRequest(`/dashboard/stats${params}`);
+  },
+  getRecentActivity: (carId?: string) => {
+    const params = carId ? `?carId=${carId}` : '';
+    return apiRequest(`/dashboard/recent-activity${params}`);
+  },
+  getSelectedVehicle: (carId?: string) => {
+    const params = carId ? `?carId=${carId}` : '';
+    return apiRequest(`/dashboard/selected-vehicle${params}`);
+  },
+  getOverview: () => apiRequest('/dashboard/overview'),
+  getAnalytics: (carId?: string) => {
+    const params = carId ? `?carId=${carId}` : '';
+    return apiRequest(`/dashboard/analytics${params}`);
+  },
 };
 
 interface Car {
