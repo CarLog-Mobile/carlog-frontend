@@ -1,9 +1,11 @@
 // API service for CarLog app
-const API_BASE_URL = 'http://localhost:8080/api';
+const API_BASE_URL = 'http://10.0.2.2:8080/api';
 
 // Generic API request function
 const apiRequest = async (endpoint: string, options: RequestInit = {}) => {
   const url = `${API_BASE_URL}${endpoint}`;
+  
+  console.log('Making API request to:', url);
   
   const config: RequestInit = {
     headers: {
@@ -13,14 +15,27 @@ const apiRequest = async (endpoint: string, options: RequestInit = {}) => {
     ...options,
   };
 
+  // Add timeout to prevent hanging requests
+  const timeoutPromise = new Promise((_, reject) => {
+    setTimeout(() => reject(new Error('Request timeout')), 10000); // 10 second timeout
+  });
+
   try {
-    const response = await fetch(url, config);
+    console.log('Starting fetch request...');
+    const response = await Promise.race([
+      fetch(url, config),
+      timeoutPromise
+    ]) as Response;
+    console.log('Response received:', response.status, response.statusText);
     
     if (!response.ok) {
+      console.error('Response not ok:', response.status, response.statusText);
       throw new Error('Network error');
     }
     
-    return await response.json();
+    const data = await response.json();
+    console.log('Response data:', data);
+    return data;
   } catch (error) {
     console.error('API request failed:', error);
     throw new Error('Network error');
