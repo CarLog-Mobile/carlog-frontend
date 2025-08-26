@@ -25,10 +25,10 @@ export default function DashboardScreen({ navigation }: any) {
   };
 
   const quickActions = [
-    { title: 'Add Trip', icon: 'car' as const, color: '#3b82f6', onPress: () => navigation.navigate('Trips') },
-    { title: 'Add Fuel', icon: 'water' as const, color: '#10b981', onPress: () => navigation.navigate('Fuel') },
-    { title: 'Maintenance', icon: 'construct' as const, color: '#f59e0b', onPress: () => navigation.navigate('Maintenance') },
-    { title: 'OBD Live', icon: 'analytics' as const, color: '#8b5cf6', onPress: () => navigation.navigate('OBDLive') },
+    { title: 'Garages', icon: 'construct' as const, badge: 2, onPress: () => navigation.navigate('Garages') },
+    { title: 'Forums', icon: 'chatbubbles' as const, onPress: () => navigation.navigate('Forums') },
+    { title: 'Parts', icon: 'settings' as const, onPress: () => navigation.navigate('Parts') },
+    { title: 'Trips', icon: 'document' as const, onPress: () => navigation.navigate('Trips') },
   ];
 
   const recentActivity = [
@@ -103,19 +103,30 @@ export default function DashboardScreen({ navigation }: any) {
 
           {/* Quick Actions */}
           <View style={styles.section}>
-            <Text style={styles.sectionTitle}>Quick Actions</Text>
-            <View style={styles.quickActionsGrid}>
-                             {quickActions.map((action, index) => (
-                 <TouchableOpacity
-                   key={index}
-                   style={[styles.quickActionCard, { backgroundColor: action.color }]}
-                   onPress={action.onPress}
-                 >
-                   <Ionicons name={action.icon} size={32} color="white" style={styles.quickActionIcon} />
-                   <Text style={styles.quickActionText}>{action.title}</Text>
-                 </TouchableOpacity>
-               ))}
+            <View style={styles.sectionHeader}>
+              <Text style={styles.sectionTitle}>Quick Actions</Text>
+              <TouchableOpacity>
+                <Text style={styles.viewAllText}>View all</Text>
+              </TouchableOpacity>
             </View>
+                                                   <View style={styles.quickActionsGrid}>
+                {quickActions.map((action, index) => (
+                  <View key={index} style={styles.quickActionContainer}>
+                    <TouchableOpacity
+                      style={styles.quickActionCard}
+                      onPress={action.onPress}
+                    >
+                      {action.badge && (
+                        <View style={styles.badge}>
+                          <Text style={styles.badgeText}>{action.badge}</Text>
+                        </View>
+                      )}
+                                             <Ionicons name={action.icon} size={36} color="#3b82f6" style={styles.quickActionIcon} />
+                    </TouchableOpacity>
+                    <Text style={styles.quickActionText}>{action.title}</Text>
+                  </View>
+                ))}
+              </View>
           </View>
 
           {/* Performance Metrics */}
@@ -153,7 +164,7 @@ export default function DashboardScreen({ navigation }: any) {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#f9fafb',
+    backgroundColor: '#F3F4F6',
   },
 
   header: {
@@ -216,11 +227,6 @@ const styles = StyleSheet.create({
     padding: 16,
     flex: 1,
     alignItems: 'flex-start',
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.1,
-    shadowRadius: 3.84,
-    elevation: 5,
   },
   statValue: {
     fontSize: 28,
@@ -240,11 +246,6 @@ const styles = StyleSheet.create({
     backgroundColor: 'white',
     borderRadius: 12,
     padding: 16,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.1,
-    shadowRadius: 3.84,
-    elevation: 5,
   },
   vehicleHeader: {
     flexDirection: 'row',
@@ -318,48 +319,71 @@ const styles = StyleSheet.create({
   section: {
     marginBottom: 24,
   },
+  sectionHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: 16,
+  },
   sectionTitle: {
     fontSize: 20,
     fontWeight: 'bold',
     color: '#1f2937',
-    marginBottom: 16,
+  },
+  viewAllText: {
+    fontSize: 14,
+    color: '#3b82f6',
+    fontWeight: '500',
   },
   quickActionsGrid: {
     flexDirection: 'row',
     flexWrap: 'wrap',
     gap: 12,
   },
-  quickActionCard: {
-    backgroundColor: '#3b82f6',
-    borderRadius: 12,
-    padding: 20,
-    width: '47%',
+  quickActionContainer: {
     alignItems: 'center',
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.1,
-    shadowRadius: 3.84,
-    elevation: 5,
+    width: '22%',
+  },
+  quickActionCard: {
+    backgroundColor: 'white',
+    borderRadius: 30,
+    padding: 16,
+    alignItems: 'center',
+    justifyContent: 'center',
+    position: 'relative',
+    width: '100%',
+    height: 80,
+    marginBottom: 8,
   },
   quickActionIcon: {
-    fontSize: 32,
     marginBottom: 8,
   },
   quickActionText: {
-    color: 'white',
+    color: '#1f2937',
     fontSize: 14,
-    fontWeight: '600',
+    fontWeight: '500',
     textAlign: 'center',
+  },
+  badge: {
+    position: 'absolute',
+    top: -4,
+    right: -4,
+    backgroundColor: '#ef4444',
+    borderRadius: 10,
+    width: 20,
+    height: 20,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  badgeText: {
+    color: 'white',
+    fontSize: 12,
+    fontWeight: 'bold',
   },
   performanceCard: {
     backgroundColor: 'white',
     borderRadius: 12,
     padding: 20,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.1,
-    shadowRadius: 3.84,
-    elevation: 5,
   },
   performanceItem: {
     flexDirection: 'row',
@@ -383,11 +407,6 @@ const styles = StyleSheet.create({
     borderRadius: 8,
     padding: 16,
     marginBottom: 8,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 1 },
-    shadowOpacity: 0.1,
-    shadowRadius: 2,
-    elevation: 2,
   },
   activityIcon: {
     fontSize: 20,
