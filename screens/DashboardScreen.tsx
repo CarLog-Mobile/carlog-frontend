@@ -14,7 +14,6 @@ interface DashboardStats {
 }
 
 export default function DashboardScreen({ navigation }: any) {
-  const [sidebarOpen, setSidebarOpen] = useState(false);
   
   const stats: DashboardStats = {
     totalCars: 2,
@@ -39,106 +38,17 @@ export default function DashboardScreen({ navigation }: any) {
     { type: 'trip', title: 'Grocery store run', time: '1 week ago', icon: 'car' as const },
   ];
 
-  const Sidebar = () => (
-    <View style={styles.sidebar}>
-      <View style={styles.sidebarHeader}>
-        <Text style={styles.sidebarTitle}>CarLog</Text>
-        <Text style={styles.sidebarSubtitle}>Vehicle Manager</Text>
-      </View>
-      
-      <ScrollView style={styles.sidebarMenu}>
-        <TouchableOpacity 
-          style={styles.sidebarItem}
-          onPress={() => {
-            setSidebarOpen(false);
-            navigation.navigate('Cars');
-          }}
-        >
-          <Ionicons name="car" size={20} color="white" style={styles.sidebarIcon} />
-          <Text style={styles.sidebarText}>My Cars</Text>
-        </TouchableOpacity>
-        
-        <TouchableOpacity 
-          style={styles.sidebarItem}
-          onPress={() => {
-            setSidebarOpen(false);
-            navigation.navigate('Trips');
-          }}
-        >
-          <Ionicons name="map" size={20} color="white" style={styles.sidebarIcon} />
-          <Text style={styles.sidebarText}>Trips</Text>
-        </TouchableOpacity>
-        
-        <TouchableOpacity 
-          style={styles.sidebarItem}
-          onPress={() => {
-            setSidebarOpen(false);
-            navigation.navigate('Fuel');
-          }}
-        >
-          <Ionicons name="water" size={20} color="white" style={styles.sidebarIcon} />
-          <Text style={styles.sidebarText}>Fuel Tracker</Text>
-        </TouchableOpacity>
-        
-        <TouchableOpacity 
-          style={styles.sidebarItem}
-          onPress={() => {
-            setSidebarOpen(false);
-            navigation.navigate('Maintenance');
-          }}
-        >
-          <Ionicons name="construct" size={20} color="white" style={styles.sidebarIcon} />
-          <Text style={styles.sidebarText}>Maintenance</Text>
-        </TouchableOpacity>
-        
-        <TouchableOpacity 
-          style={styles.sidebarItem}
-          onPress={() => {
-            setSidebarOpen(false);
-            navigation.navigate('OBDLive');
-          }}
-        >
-          <Ionicons name="analytics" size={20} color="white" style={styles.sidebarIcon} />
-          <Text style={styles.sidebarText}>OBD Live</Text>
-        </TouchableOpacity>
-      </ScrollView>
-      
-      <View style={styles.sidebarFooter}>
-        <Text style={styles.sidebarFooterText}>Version 1.0.0</Text>
-      </View>
-    </View>
-  );
+
 
   return (
     <View style={styles.container}>
-      {/* Sidebar Overlay */}
-      {sidebarOpen && (
-        <TouchableOpacity 
-          style={styles.overlay}
-          onPress={() => setSidebarOpen(false)}
-        />
-      )}
-      
-      {/* Sidebar */}
-      <View style={[styles.sidebarContainer, { transform: [{ translateX: sidebarOpen ? 0 : -width * 0.8 }] }]}>
-        <Sidebar />
-      </View>
-
-      {/* Main Content */}
-      <View style={styles.mainContent}>
-        {/* Header */}
-        <View style={styles.header}>
-          <TouchableOpacity 
-            style={styles.menuButton}
-            onPress={() => setSidebarOpen(true)}
-          >
-            <Text style={styles.menuIcon}>☰</Text>
-          </TouchableOpacity>
-          <View style={styles.headerContent}>
-            <Text style={styles.headerTitle}>Dashboard</Text>
-            <Text style={styles.headerSubtitle}>Welcome back!</Text>
-          </View>
+      {/* Header */}
+      <View style={styles.header}>
+        <View style={styles.headerContent}>
+          <Text style={styles.headerTitle}>Dashboard</Text>
+          <Text style={styles.headerSubtitle}>Welcome back!</Text>
         </View>
+      </View>
 
         <ScrollView style={styles.scrollView}>
           {/* Stats Cards */}
@@ -211,7 +121,6 @@ export default function DashboardScreen({ navigation }: any) {
              ))}
           </View>
         </ScrollView>
-      </View>
     </View>
   );
 }
@@ -221,82 +130,7 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: '#f9fafb',
   },
-  overlay: {
-    position: 'absolute',
-    top: 0,
-    left: 0,
-    right: 0,
-    bottom: 0,
-    backgroundColor: 'rgba(0, 0, 0, 0.5)',
-    zIndex: 1,
-  },
-  sidebarContainer: {
-    position: 'absolute',
-    top: 0,
-    left: 0,
-    width: width * 0.8,
-    height: '100%',
-    backgroundColor: '#1f2937',
-    zIndex: 2,
-    shadowColor: '#000',
-    shadowOffset: { width: 2, height: 0 },
-    shadowOpacity: 0.25,
-    shadowRadius: 3.84,
-    elevation: 5,
-  },
-  sidebar: {
-    flex: 1,
-    paddingTop: 48,
-  },
-  sidebarHeader: {
-    padding: 20,
-    borderBottomWidth: 1,
-    borderBottomColor: '#374151',
-  },
-  sidebarTitle: {
-    fontSize: 24,
-    fontWeight: 'bold',
-    color: 'white',
-  },
-  sidebarSubtitle: {
-    fontSize: 14,
-    color: '#9ca3af',
-    marginTop: 4,
-  },
-  sidebarMenu: {
-    flex: 1,
-    paddingTop: 20,
-  },
-  sidebarItem: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    paddingVertical: 15,
-    paddingHorizontal: 20,
-    borderBottomWidth: 1,
-    borderBottomColor: '#374151',
-  },
-  sidebarIcon: {
-    fontSize: 20,
-    marginRight: 15,
-  },
-  sidebarText: {
-    fontSize: 16,
-    color: 'white',
-    fontWeight: '500',
-  },
-  sidebarFooter: {
-    padding: 20,
-    borderTopWidth: 1,
-    borderTopColor: '#374151',
-  },
-  sidebarFooterText: {
-    fontSize: 12,
-    color: '#9ca3af',
-    textAlign: 'center',
-  },
-  mainContent: {
-    flex: 1,
-  },
+
   header: {
     backgroundColor: '#2563eb',
     paddingTop: 48,
@@ -305,13 +139,7 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
   },
-  menuButton: {
-    marginRight: 16,
-  },
-  menuIcon: {
-    fontSize: 24,
-    color: 'white',
-  },
+
   headerContent: {
     flex: 1,
   },
