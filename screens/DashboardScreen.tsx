@@ -47,9 +47,17 @@ export default function DashboardScreen({ navigation }: any) {
         <View style={styles.headerContent}>
           <Text style={styles.headerTitle}>Dashboard</Text>
         </View>
-        <TouchableOpacity style={styles.notificationButton}>
-          <Ionicons name="notifications-outline" size={24} color="#1f2937" />
-        </TouchableOpacity>
+        <View style={styles.headerActions}>
+          <TouchableOpacity style={styles.iconButton}>
+            <Ionicons name="search" size={20} color="#1f2937" />
+          </TouchableOpacity>
+          <TouchableOpacity style={styles.iconButton}>
+            <Ionicons name="notifications-outline" size={20} color="#1f2937" />
+          </TouchableOpacity>
+          <TouchableOpacity style={styles.profileButton}>
+            <Ionicons name="person" size={20} color="white" />
+          </TouchableOpacity>
+        </View>
       </View>
 
         <ScrollView style={styles.scrollView}>
@@ -135,11 +143,33 @@ const styles = StyleSheet.create({
   },
   headerTitle: {
     color: '#1f2937',
-    fontSize: 24,
+    fontSize: 32,
     fontWeight: 'bold',
   },
-  notificationButton: {
+  headerActions: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+  },
+  iconButton: {
+    backgroundColor: '#f3f4f6',
+    borderRadius: 8,
     padding: 8,
+    borderWidth: 1,
+    borderColor: '#e5e7eb',
+    alignItems: 'center',
+    justifyContent: 'center',
+    width: 36,
+    height: 36,
+  },
+  profileButton: {
+    backgroundColor: '#3b82f6',
+    borderRadius: 8,
+    padding: 8,
+    alignItems: 'center',
+    justifyContent: 'center',
+    width: 36,
+    height: 36,
   },
   scrollView: {
     flex: 1,
