@@ -25,7 +25,7 @@ export default function MaintenanceScreen({ navigation, route }: any) {
       description: 'Synthetic oil change and filter replacement',
       date: '2024-01-10',
       mileage: 45000,
-      cost: 0,
+      cost: 4500,
       status: 'completed',
       type: 'oil_change',
       nextDueMileage: 48000,
@@ -37,7 +37,7 @@ export default function MaintenanceScreen({ navigation, route }: any) {
       description: 'Rotate tires and balance wheels',
       date: '2024-01-05',
       mileage: 44800,
-      cost: 0,
+      cost: 3500,
       status: 'completed',
       type: 'tire_rotation',
       nextDueMileage: 47800,
@@ -49,7 +49,7 @@ export default function MaintenanceScreen({ navigation, route }: any) {
       description: 'Check brake pads and rotors',
       date: '2024-02-20',
       mileage: 47000,
-      cost: 0,
+      cost: 2500,
       status: 'completed',
       type: 'brake_service'
     }
@@ -154,11 +154,15 @@ export default function MaintenanceScreen({ navigation, route }: any) {
       </View>
 
       <ScrollView style={styles.scrollView}>
-        {/* Stats Card */}
+        {/* Stats Cards */}
         <View style={styles.statsRow}>
-          <View style={[styles.statCard, { flex: 1 }]}>
+          <View style={styles.statCard}>
             <Text style={styles.statLabel}>Total Services</Text>
             <Text style={styles.statValue}>{maintenanceItems.length}</Text>
+          </View>
+          <View style={styles.statCard}>
+            <Text style={styles.statLabel}>Total Cost</Text>
+            <Text style={styles.statValue}>{maintenanceItems.reduce((sum, item) => sum + (item.cost || 0), 0).toFixed(2)}</Text>
           </View>
         </View>
 
@@ -190,7 +194,7 @@ export default function MaintenanceScreen({ navigation, route }: any) {
                   {item.cost > 0 && (
                     <View style={styles.maintenanceDetail}>
                       <Ionicons name="cash" size={14} color="#9ca3af" />
-                      <Text style={styles.maintenanceDetailText}>LKR {item.cost.toFixed(2)}</Text>
+                      <Text style={styles.maintenanceDetailText}>{item.cost.toFixed(2)}</Text>
                     </View>
                   )}
                 </View>
