@@ -129,7 +129,7 @@ export default function DashboardScreen({ navigation }: any) {
     { title: 'Fuel', icon: 'water' as const, onPress: () => navigation.navigate('Fuel', { carId: selectedCar?.id }) },
     { title: 'Trips', icon: 'map' as const, onPress: () => navigation.navigate('Trips', { carId: selectedCar?.id }) },
     { title: 'Repair', icon: 'construct' as const, onPress: () => navigation.navigate('Maintenance', { carId: selectedCar?.id }) },
-    { title: 'OBD', icon: 'scan' as const, onPress: () => navigation.navigate('OBDLive') },
+    { title: 'Settings', icon: 'settings' as const, onPress: () => navigation.navigate('Settings') },
   ];
 
   // Generate recent activity from trips and fuel entries

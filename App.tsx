@@ -7,7 +7,6 @@ import CarsScreen from './screens/CarsScreen';
 import TripsScreen from './screens/TripsScreen';
 import FuelScreen from './screens/FuelScreen';
 import MaintenanceScreen from './screens/MaintenanceScreen';
-import OBDLiveScreen from './screens/OBDLiveScreen';
 
 // import './global.css'; // Temporarily disabled - NativeWind cache issue
 
@@ -48,8 +47,8 @@ export default function App() {
         return <FuelScreen navigation={navigation} />;
       case 'Maintenance':
         return <MaintenanceScreen navigation={navigation} />;
-      case 'OBDLive':
-        return <OBDLiveScreen navigation={navigation} />;
+      case 'Settings':
+        return <DashboardScreen navigation={navigation} />; // Placeholder for settings
       default:
         return <DashboardScreen navigation={navigation} />;
     }

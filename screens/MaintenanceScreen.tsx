@@ -118,11 +118,11 @@ export default function MaintenanceScreen({ navigation, route }: any) {
 
   const getTypeIcon = (type: MaintenanceItem['type']) => {
     switch (type) {
-      case 'oil_change': return '🛢️';
-      case 'tire_rotation': return '🛞';
-      case 'brake_service': return '🛑';
-      case 'inspection': return '🔍';
-      default: return '🔧';
+      case 'oil_change': return 'water-outline';
+      case 'tire_rotation': return 'disc-outline';
+      case 'brake_service': return 'hand-left-outline';
+      case 'inspection': return 'search-outline';
+      default: return 'build-outline';
     }
   };
 
@@ -147,6 +147,9 @@ export default function MaintenanceScreen({ navigation, route }: any) {
           <TouchableOpacity style={styles.iconButton}>
             <Ionicons name="filter" size={20} color="#1f2937" />
           </TouchableOpacity>
+          <TouchableOpacity style={styles.headerAddButton} onPress={() => setShowAddForm(true)}>
+            <Ionicons name="add" size={20} color="white" />
+          </TouchableOpacity>
         </View>
       </View>
 
@@ -169,21 +172,24 @@ export default function MaintenanceScreen({ navigation, route }: any) {
 
         {/* Maintenance Items */}
         {maintenanceItems.map((item) => (
-          <TouchableOpacity
+          <View
             key={item.id}
             style={styles.maintenanceCard}
-            onPress={() => navigation.navigate('OBDLive', { maintenanceId: item.id })}
           >
             <View style={styles.maintenanceCardContent}>
               <View style={styles.maintenanceInfo}>
                 <View style={styles.maintenanceHeader}>
-                  <Text style={styles.maintenanceIcon}>{getTypeIcon(item.type)}</Text>
+                  <View style={[styles.iconCircle, { backgroundColor: getStatusColor(item.status) + '20' }]}>
+                    <Ionicons name={getTypeIcon(item.type)} size={20} color={getStatusColor(item.status)} />
+                  </View>
                   <View style={styles.maintenanceTitleSection}>
                     <Text style={styles.maintenanceTitle}>{item.title}</Text>
-                    <Text style={styles.maintenanceDescription}>{item.description}</Text>
+                    <Text style={styles.maintenanceDate}>{item.date}</Text>
                   </View>
                 </View>
-                <Text style={styles.maintenanceDate}>{item.date}</Text>
+                {item.description && (
+                  <Text style={styles.maintenanceDescription}>{item.description}</Text>
+                )}
                 <View style={styles.maintenanceDetails}>
                   <View style={styles.maintenanceDetail}>
                     <Ionicons name="speedometer" size={14} color="#9ca3af" />
@@ -192,40 +198,38 @@ export default function MaintenanceScreen({ navigation, route }: any) {
                   {item.cost > 0 && (
                     <View style={styles.maintenanceDetail}>
                       <Ionicons name="card" size={14} color="#9ca3af" />
-                      <Text style={styles.maintenanceDetailText}>${item.cost}</Text>
+                      <Text style={styles.maintenanceDetailText}>${item.cost.toFixed(2)}</Text>
                     </View>
                   )}
-                  {item.nextDueMileage && (
-                    <View style={styles.maintenanceDetail}>
-                      <Ionicons name="calendar" size={14} color="#0656E0" />
-                      <Text style={styles.maintenanceDetailTextDue}>Due: {item.nextDueMileage} mi</Text>
-                    </View>
-                  )}
+                  <View style={[styles.statusBadge, { backgroundColor: getStatusColor(item.status) }]}>
+                    <Text style={styles.statusText}>{item.status}</Text>
+                  </View>
                 </View>
+                {item.nextDueMileage && (
+                  <View style={styles.nextDueContainer}>
+                    <Ionicons name="calendar-outline" size={14} color="#0656E0" />
+                    <Text style={styles.nextDueText}>Next due at {item.nextDueMileage} mi</Text>
+                  </View>
+                )}
               </View>
               <View style={styles.maintenanceActions}>
-                <View style={[styles.statusBadge, { backgroundColor: getStatusColor(item.status) }]}>
-                  <Text style={styles.statusText}>{item.status}</Text>
-                </View>
                 {item.status === 'scheduled' && (
                   <TouchableOpacity
                     onPress={() => markCompleted(item.id)}
                     style={styles.completeButton}
                   >
                     <Ionicons name="checkmark" size={14} color="white" />
-                    <Text style={styles.completeButtonText}>Complete</Text>
                   </TouchableOpacity>
                 )}
                 <TouchableOpacity
                   onPress={() => deleteItem(item.id)}
                   style={styles.deleteButton}
                 >
-                  <Ionicons name="trash-outline" size={16} color="white" />
-                  <Text style={styles.deleteButtonText}>Delete</Text>
+                  <Ionicons name="trash-outline" size={14} color="white" />
                 </TouchableOpacity>
               </View>
             </View>
-          </TouchableOpacity>
+          </View>
         ))}
 
         {showAddForm && (
@@ -350,6 +354,15 @@ const styles = StyleSheet.create({
     width: 36,
     height: 36,
   },
+  headerAddButton: {
+    backgroundColor: '#f97316',
+    borderRadius: 8,
+    padding: 8,
+    alignItems: 'center',
+    justifyContent: 'center',
+    width: 36,
+    height: 36,
+  },
 
   scrollView: {
     flex: 1,
@@ -398,11 +411,15 @@ const styles = StyleSheet.create({
   },
   maintenanceHeader: {
     flexDirection: 'row',
-    alignItems: 'flex-start',
-    marginBottom: 8,
+    alignItems: 'center',
+    marginBottom: 12,
   },
-  maintenanceIcon: {
-    fontSize: 24,
+  iconCircle: {
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    alignItems: 'center',
+    justifyContent: 'center',
     marginRight: 12,
   },
   maintenanceTitleSection: {
@@ -412,20 +429,23 @@ const styles = StyleSheet.create({
     fontSize: 18,
     fontWeight: '600',
     color: '#1f2937',
-    marginBottom: 4,
+    marginBottom: 2,
   },
   maintenanceDescription: {
     fontSize: 14,
     color: '#6b7280',
+    marginBottom: 8,
   },
   maintenanceDate: {
-    color: '#6b7280',
-    fontSize: 16,
-    marginBottom: 8,
+    color: '#9ca3af',
+    fontSize: 14,
   },
   maintenanceDetails: {
     flexDirection: 'row',
-    gap: 16,
+    flexWrap: 'wrap',
+    gap: 12,
+    alignItems: 'center',
+    marginBottom: 8,
   },
   maintenanceDetail: {
     flexDirection: 'row',
@@ -436,54 +456,53 @@ const styles = StyleSheet.create({
     color: '#9ca3af',
     fontSize: 14,
   },
-  maintenanceDetailTextDue: {
+  nextDueContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+    backgroundColor: '#eff6ff',
+    paddingHorizontal: 12,
+    paddingVertical: 6,
+    borderRadius: 8,
+    alignSelf: 'flex-start',
+  },
+  nextDueText: {
     color: '#0656E0',
-    fontSize: 14,
+    fontSize: 13,
+    fontWeight: '500',
   },
   maintenanceActions: {
-    alignItems: 'flex-end',
+    alignItems: 'center',
     gap: 8,
   },
   statusBadge: {
-    paddingHorizontal: 8,
+    paddingHorizontal: 10,
     paddingVertical: 4,
-    borderRadius: 6,
+    borderRadius: 12,
   },
   statusText: {
     color: 'white',
-    fontSize: 12,
-    fontWeight: '500',
+    fontSize: 11,
+    fontWeight: '600',
     textTransform: 'capitalize',
   },
   completeButton: {
     backgroundColor: '#059669',
-    flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
-    paddingHorizontal: 8,
-    paddingVertical: 4,
-    borderRadius: 6,
-    gap: 4,
-  },
-  completeButtonText: {
-    color: 'white',
-    fontSize: 12,
-    fontWeight: '500',
+    padding: 8,
+    borderRadius: 8,
+    width: 32,
+    height: 32,
   },
   deleteButton: {
     backgroundColor: '#ef4444',
-    flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
-    paddingHorizontal: 12,
-    paddingVertical: 8,
+    padding: 8,
     borderRadius: 8,
-    gap: 6,
-  },
-  deleteButtonText: {
-    color: 'white',
-    fontSize: 14,
-    fontWeight: '500',
+    width: 32,
+    height: 32,
   },
   formCard: {
     backgroundColor: 'white',
