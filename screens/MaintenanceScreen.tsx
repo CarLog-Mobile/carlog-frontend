@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { View, Text, TouchableOpacity, ScrollView, TextInput, Alert, StyleSheet, Dimensions } from 'react-native';
+import { View, Text, TouchableOpacity, ScrollView, TextInput, Alert, StyleSheet, Dimensions, Modal, ActivityIndicator } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 
 const { width } = Dimensions.get('window');
@@ -25,7 +25,7 @@ export default function MaintenanceScreen({ navigation, route }: any) {
       description: 'Synthetic oil change and filter replacement',
       date: '2024-01-10',
       mileage: 45000,
-      cost: 45.00,
+      cost: 0,
       status: 'completed',
       type: 'oil_change',
       nextDueMileage: 48000,
@@ -37,7 +37,7 @@ export default function MaintenanceScreen({ navigation, route }: any) {
       description: 'Rotate tires and balance wheels',
       date: '2024-01-05',
       mileage: 44800,
-      cost: 35.00,
+      cost: 0,
       status: 'completed',
       type: 'tire_rotation',
       nextDueMileage: 47800,
@@ -50,12 +50,13 @@ export default function MaintenanceScreen({ navigation, route }: any) {
       date: '2024-02-20',
       mileage: 47000,
       cost: 0,
-      status: 'scheduled',
+      status: 'completed',
       type: 'brake_service'
     }
   ]);
 
   const [showAddForm, setShowAddForm] = useState(false);
+  const [addingItem, setAddingItem] = useState(false);
   const [newItem, setNewItem] = useState({
     title: '',
     description: '',
@@ -66,34 +67,36 @@ export default function MaintenanceScreen({ navigation, route }: any) {
     nextDueDate: ''
   });
 
-  const addMaintenanceItem = () => {
+  const addMaintenanceItem = async () => {
     if (!newItem.title || !newItem.mileage) {
       Alert.alert('Error', 'Please fill in all required fields');
       return;
     }
 
-    const item: MaintenanceItem = {
-      id: Date.now().toString(),
-      title: newItem.title,
-      description: newItem.description,
-      date: new Date().toISOString().split('T')[0],
-      mileage: parseFloat(newItem.mileage) || 0,
-      cost: parseFloat(newItem.cost) || 0,
-      status: 'scheduled',
-      type: newItem.type,
-      nextDueMileage: parseFloat(newItem.nextDueMileage) || undefined,
-      nextDueDate: newItem.nextDueDate || undefined
-    };
+    try {
+      setAddingItem(true);
+      const item: MaintenanceItem = {
+        id: Date.now().toString(),
+        title: newItem.title,
+        description: newItem.description,
+        date: new Date().toISOString().split('T')[0],
+        mileage: parseFloat(newItem.mileage) || 0,
+        cost: parseFloat(newItem.cost) || 0,
+        status: 'completed',
+        type: newItem.type,
+        nextDueMileage: parseFloat(newItem.nextDueMileage) || undefined,
+        nextDueDate: newItem.nextDueDate || undefined
+      };
 
-    setMaintenanceItems([item, ...maintenanceItems]);
-    setNewItem({ title: '', description: '', mileage: '', cost: '', type: 'oil_change', nextDueMileage: '', nextDueDate: '' });
-    setShowAddForm(false);
-  };
-
-  const markCompleted = (id: string) => {
-    setMaintenanceItems(maintenanceItems.map(item => 
-      item.id === id ? { ...item, status: 'completed' as const } : item
-    ));
+      setMaintenanceItems([item, ...maintenanceItems]);
+      setNewItem({ title: '', description: '', mileage: '', cost: '', type: 'oil_change', nextDueMileage: '', nextDueDate: '' });
+      setShowAddForm(false);
+    } catch (err) {
+      Alert.alert('Error', 'Failed to add maintenance item');
+      console.error('Error adding maintenance item:', err);
+    } finally {
+      setAddingItem(false);
+    }
   };
 
   const deleteItem = (id: string) => {
@@ -107,11 +110,12 @@ export default function MaintenanceScreen({ navigation, route }: any) {
     );
   };
 
-  const getStatusColor = (status: MaintenanceItem['status']) => {
-    switch (status) {
-      case 'completed': return '#059669';
-      case 'scheduled': return '#0656E0';
-      case 'overdue': return '#ef4444';
+  const getTypeColor = (type: MaintenanceItem['type']) => {
+    switch (type) {
+      case 'oil_change': return '#0656E0';
+      case 'tire_rotation': return '#059669';
+      case 'brake_service': return '#f97316';
+      case 'inspection': return '#8b5cf6';
       default: return '#6b7280';
     }
   };
@@ -125,10 +129,6 @@ export default function MaintenanceScreen({ navigation, route }: any) {
       default: return 'build-outline';
     }
   };
-
-  const completedItems = maintenanceItems.filter(item => item.status === 'completed');
-  const scheduledItems = maintenanceItems.filter(item => item.status === 'scheduled');
-  const totalCost = completedItems.reduce((sum, item) => sum + item.cost, 0);
 
   return (
     <View style={styles.container}>
@@ -154,19 +154,11 @@ export default function MaintenanceScreen({ navigation, route }: any) {
       </View>
 
       <ScrollView style={styles.scrollView}>
-        {/* Stats Cards */}
+        {/* Stats Card */}
         <View style={styles.statsRow}>
-          <View style={styles.statCard}>
-            <Text style={styles.statLabel}>Completed</Text>
-            <Text style={styles.statValue}>{completedItems.length}</Text>
-          </View>
-          <View style={styles.statCard}>
-            <Text style={styles.statLabel}>Scheduled</Text>
-            <Text style={styles.statValue}>{scheduledItems.length}</Text>
-          </View>
-          <View style={styles.statCard}>
-            <Text style={styles.statLabel}>Total Cost</Text>
-            <Text style={styles.statValue}>${totalCost.toFixed(2)}</Text>
+          <View style={[styles.statCard, { flex: 1 }]}>
+            <Text style={styles.statLabel}>Total Services</Text>
+            <Text style={styles.statValue}>{maintenanceItems.length}</Text>
           </View>
         </View>
 
@@ -179,8 +171,8 @@ export default function MaintenanceScreen({ navigation, route }: any) {
             <View style={styles.maintenanceCardContent}>
               <View style={styles.maintenanceInfo}>
                 <View style={styles.maintenanceHeader}>
-                  <View style={[styles.iconCircle, { backgroundColor: getStatusColor(item.status) + '20' }]}>
-                    <Ionicons name={getTypeIcon(item.type)} size={20} color={getStatusColor(item.status)} />
+                  <View style={[styles.iconCircle, { backgroundColor: getTypeColor(item.type) + '20' }]}>
+                    <Ionicons name={getTypeIcon(item.type)} size={20} color={getTypeColor(item.type)} />
                   </View>
                   <View style={styles.maintenanceTitleSection}>
                     <Text style={styles.maintenanceTitle}>{item.title}</Text>
@@ -197,13 +189,10 @@ export default function MaintenanceScreen({ navigation, route }: any) {
                   </View>
                   {item.cost > 0 && (
                     <View style={styles.maintenanceDetail}>
-                      <Ionicons name="card" size={14} color="#9ca3af" />
-                      <Text style={styles.maintenanceDetailText}>${item.cost.toFixed(2)}</Text>
+                      <Ionicons name="cash" size={14} color="#9ca3af" />
+                      <Text style={styles.maintenanceDetailText}>LKR {item.cost.toFixed(2)}</Text>
                     </View>
                   )}
-                  <View style={[styles.statusBadge, { backgroundColor: getStatusColor(item.status) }]}>
-                    <Text style={styles.statusText}>{item.status}</Text>
-                  </View>
                 </View>
                 {item.nextDueMileage && (
                   <View style={styles.nextDueContainer}>
@@ -213,14 +202,6 @@ export default function MaintenanceScreen({ navigation, route }: any) {
                 )}
               </View>
               <View style={styles.maintenanceActions}>
-                {item.status === 'scheduled' && (
-                  <TouchableOpacity
-                    onPress={() => markCompleted(item.id)}
-                    style={styles.completeButton}
-                  >
-                    <Ionicons name="checkmark" size={14} color="white" />
-                  </TouchableOpacity>
-                )}
                 <TouchableOpacity
                   onPress={() => deleteItem(item.id)}
                   style={styles.deleteButton}
@@ -232,82 +213,113 @@ export default function MaintenanceScreen({ navigation, route }: any) {
           </View>
         ))}
 
-        {showAddForm && (
-          <View style={styles.formCard}>
-            <Text style={styles.formTitle}>Add Maintenance Item</Text>
-            <TextInput
-              style={styles.input}
-              placeholder="Title (e.g., Oil Change)"
-              value={newItem.title}
-              onChangeText={(text) => setNewItem({...newItem, title: text})}
-            />
-            <TextInput
-              style={styles.input}
-              placeholder="Description (optional)"
-              value={newItem.description}
-              onChangeText={(text) => setNewItem({...newItem, description: text})}
-            />
-            <TextInput
-              style={styles.input}
-              placeholder="Current Mileage"
-              value={newItem.mileage}
-              onChangeText={(text) => setNewItem({...newItem, mileage: text})}
-              keyboardType="numeric"
-            />
-            <TextInput
-              style={styles.input}
-              placeholder="Cost ($)"
-              value={newItem.cost}
-              onChangeText={(text) => setNewItem({...newItem, cost: text})}
-              keyboardType="numeric"
-            />
-            <TextInput
-              style={styles.input}
-              placeholder="Next Due Mileage (optional)"
-              value={newItem.nextDueMileage}
-              onChangeText={(text) => setNewItem({...newItem, nextDueMileage: text})}
-              keyboardType="numeric"
-            />
-            <View style={styles.typeButtons}>
-              {['oil_change', 'tire_rotation', 'brake_service', 'inspection', 'other'].map((type) => (
-                <TouchableOpacity
-                  key={type}
-                  style={[styles.typeButton, newItem.type === type && styles.typeButtonActive]}
-                  onPress={() => setNewItem({...newItem, type: type as MaintenanceItem['type']})}
-                >
-                  <Text style={[styles.typeButtonText, newItem.type === type && styles.typeButtonTextActive]}>
-                    {type.replace('_', ' ')}
-                  </Text>
-                </TouchableOpacity>
-              ))}
-            </View>
-            <View style={styles.formButtons}>
+        {maintenanceItems.length === 0 && (
+          <View style={styles.emptyContainer}>
+            <Ionicons name="construct-outline" size={64} color="#9ca3af" />
+            <Text style={styles.emptyText}>No maintenance records yet</Text>
+            <Text style={styles.emptySubtext}>Add your first service to get started</Text>
+            <TouchableOpacity style={styles.addFirstButton} onPress={() => setShowAddForm(true)}>
+              <Text style={styles.addFirstButtonText}>Add First Service</Text>
+            </TouchableOpacity>
+          </View>
+        )}
+      </ScrollView>
+
+      {/* Add Maintenance Modal */}
+      <Modal
+        visible={showAddForm}
+        animationType="slide"
+        transparent={true}
+        onRequestClose={() => setShowAddForm(false)}
+      >
+        <View style={styles.modalOverlay}>
+          <View style={styles.modalContent}>
+            <View style={styles.modalHeader}>
+              <Text style={styles.modalTitle}>Add Maintenance Service</Text>
               <TouchableOpacity
-                style={styles.addButton}
-                onPress={addMaintenanceItem}
+                onPress={() => setShowAddForm(false)}
+                style={styles.closeButton}
               >
-                <Text style={styles.addButtonText}>Add Item</Text>
+                <Ionicons name="close" size={24} color="#6b7280" />
               </TouchableOpacity>
+            </View>
+            
+            <ScrollView style={styles.modalScrollView}>
+              <TextInput
+                style={styles.input}
+                placeholder="Service Title (e.g., Oil Change)"
+                value={newItem.title}
+                onChangeText={(text) => setNewItem({...newItem, title: text})}
+              />
+              <TextInput
+                style={styles.input}
+                placeholder="Description (optional)"
+                value={newItem.description}
+                onChangeText={(text) => setNewItem({...newItem, description: text})}
+                multiline
+                numberOfLines={3}
+              />
+              <TextInput
+                style={styles.input}
+                placeholder="Current Mileage"
+                value={newItem.mileage}
+                onChangeText={(text) => setNewItem({...newItem, mileage: text})}
+                keyboardType="numeric"
+              />
+              <TextInput
+                style={styles.input}
+                placeholder="Cost (LKR)"
+                value={newItem.cost}
+                onChangeText={(text) => setNewItem({...newItem, cost: text})}
+                keyboardType="numeric"
+              />
+              <TextInput
+                style={styles.input}
+                placeholder="Next Due Mileage (optional)"
+                value={newItem.nextDueMileage}
+                onChangeText={(text) => setNewItem({...newItem, nextDueMileage: text})}
+                keyboardType="numeric"
+              />
+              
+              <Text style={styles.typeLabel}>Service Type</Text>
+              <View style={styles.typeButtons}>
+                {['oil_change', 'tire_rotation', 'brake_service', 'inspection', 'other'].map((type) => (
+                  <TouchableOpacity
+                    key={type}
+                    style={[styles.typeButton, newItem.type === type && styles.typeButtonActive]}
+                    onPress={() => setNewItem({...newItem, type: type as MaintenanceItem['type']})}
+                  >
+                    <Text style={[styles.typeButtonText, newItem.type === type && styles.typeButtonTextActive]}>
+                      {type.replace('_', ' ')}
+                    </Text>
+                  </TouchableOpacity>
+                ))}
+              </View>
+            </ScrollView>
+
+            <View style={styles.modalButtons}>
               <TouchableOpacity
                 style={styles.cancelButton}
                 onPress={() => setShowAddForm(false)}
+                disabled={addingItem}
               >
                 <Text style={styles.cancelButtonText}>Cancel</Text>
               </TouchableOpacity>
+              <TouchableOpacity
+                style={[styles.addButton, addingItem && styles.addButtonDisabled]}
+                onPress={addMaintenanceItem}
+                disabled={addingItem}
+              >
+                {addingItem ? (
+                  <ActivityIndicator size="small" color="white" />
+                ) : (
+                  <Text style={styles.addButtonText}>Add Service</Text>
+                )}
+              </TouchableOpacity>
             </View>
           </View>
-        )}
-
-        {!showAddForm && (
-          <TouchableOpacity
-            style={styles.addNewButton}
-            onPress={() => setShowAddForm(true)}
-          >
-            <Ionicons name="add" size={24} color="white" />
-            <Text style={styles.addNewButtonText}>Add Maintenance Item</Text>
-          </TouchableOpacity>
-        )}
-      </ScrollView>
+        </View>
+      </Modal>
     </View>
   );
 }
@@ -355,7 +367,7 @@ const styles = StyleSheet.create({
     height: 36,
   },
   headerAddButton: {
-    backgroundColor: '#f97316',
+    backgroundColor: '#059669',
     borderRadius: 8,
     padding: 8,
     alignItems: 'center',
@@ -543,8 +555,8 @@ const styles = StyleSheet.create({
     borderColor: '#e5e7eb',
   },
   typeButtonActive: {
-    backgroundColor: '#f97316',
-    borderColor: '#f97316',
+    backgroundColor: '#059669',
+    borderColor: '#059669',
   },
   typeButtonText: {
     textAlign: 'center',
@@ -561,9 +573,11 @@ const styles = StyleSheet.create({
   },
   addButton: {
     flex: 1,
-    backgroundColor: '#f97316',
-    paddingVertical: 12,
+    backgroundColor: '#059669',
+    paddingVertical: 16,
     borderRadius: 12,
+    alignItems: 'center',
+    justifyContent: 'center',
   },
   addButtonText: {
     color: 'white',
@@ -600,5 +614,88 @@ const styles = StyleSheet.create({
     textAlign: 'center',
     fontWeight: '600',
     fontSize: 18,
+  },
+  
+  // Empty State
+  emptyContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    paddingHorizontal: 20,
+    paddingVertical: 60,
+  },
+  emptyText: {
+    marginTop: 16,
+    fontSize: 20,
+    fontWeight: '600',
+    color: '#374151',
+  },
+  emptySubtext: {
+    marginTop: 8,
+    fontSize: 16,
+    color: '#6b7280',
+    textAlign: 'center',
+    marginBottom: 24,
+  },
+  addFirstButton: {
+    backgroundColor: '#059669',
+    paddingHorizontal: 24,
+    paddingVertical: 12,
+    borderRadius: 8,
+  },
+  addFirstButtonText: {
+    color: 'white',
+    fontWeight: '600',
+    fontSize: 16,
+  },
+
+  // Modal Styles
+  modalOverlay: {
+    flex: 1,
+    backgroundColor: 'rgba(0, 0, 0, 0.5)',
+    justifyContent: 'flex-end',
+  },
+  modalContent: {
+    backgroundColor: 'white',
+    borderTopLeftRadius: 24,
+    borderTopRightRadius: 24,
+    minHeight: '70%',
+    maxHeight: '90%',
+  },
+  modalHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    padding: 20,
+    borderBottomWidth: 1,
+    borderBottomColor: '#e5e7eb',
+  },
+  modalTitle: {
+    fontSize: 20,
+    fontWeight: 'bold',
+    color: '#1f2937',
+  },
+  closeButton: {
+    padding: 4,
+  },
+  modalScrollView: {
+    padding: 20,
+  },
+  typeLabel: {
+    fontSize: 16,
+    fontWeight: '600',
+    color: '#374151',
+    marginBottom: 12,
+    marginTop: 8,
+  },
+  modalButtons: {
+    flexDirection: 'row',
+    gap: 12,
+    padding: 20,
+    borderTopWidth: 1,
+    borderTopColor: '#e5e7eb',
+  },
+  addButtonDisabled: {
+    backgroundColor: '#9ca3af',
   },
 });
