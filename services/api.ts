@@ -1,8 +1,174 @@
 // API service for CarLog app
 const API_BASE_URL = 'http://10.0.2.2:8080/api';
 
+// MOCK MODE - Set to true to use mock data instead of real API
+const USE_MOCK_DATA = true;
+
+// Mock data storage
+const mockData = {
+  cars: [
+    {
+      id: '1',
+      make: 'Toyota',
+      model: 'Camry',
+      year: '2020',
+      licensePlate: 'ABC123',
+      mileage: 45000,
+      fuelType: 'Regular'
+    },
+    {
+      id: '2',
+      make: 'Honda',
+      model: 'Civic',
+      year: '2019',
+      licensePlate: 'XYZ789',
+      mileage: 32000,
+      fuelType: 'Regular'
+    }
+  ],
+  trips: [
+    {
+      id: '1',
+      carId: '1',
+      date: '2025-11-01',
+      startLocation: 'Home',
+      endLocation: 'Work',
+      distance: 25.5,
+      duration: 35
+    },
+    {
+      id: '2',
+      carId: '1',
+      date: '2025-11-05',
+      startLocation: 'Work',
+      endLocation: 'Mall',
+      distance: 15.2,
+      duration: 20
+    }
+  ],
+  fuelEntries: [
+    {
+      id: '1',
+      carId: '1',
+      date: '2025-11-01',
+      liters: 40,
+      costPerLiter: 1.5,
+      totalCost: 60,
+      mileage: 45000,
+      fuelType: 'Regular'
+    }
+  ],
+  maintenance: [
+    {
+      id: '1',
+      carId: '1',
+      title: 'Oil Change',
+      description: 'Regular oil change service',
+      date: '2025-10-15',
+      mileage: 44000,
+      cost: 50,
+      status: 'completed',
+      type: 'oil_change',
+      nextDueMileage: 47000,
+      nextDueDate: '2026-01-15'
+    }
+  ]
+};
+
+// Mock API response delay (simulates network)
+const mockDelay = () => new Promise(resolve => setTimeout(resolve, 300));
+
 // Generic API request function
 const apiRequest = async (endpoint: string, options: RequestInit = {}) => {
+  // If using mock data, return mock responses
+  if (USE_MOCK_DATA) {
+    await mockDelay();
+    console.log('Using mock data for:', endpoint);
+    
+    // Parse endpoint and return appropriate mock data
+    if (endpoint.includes('/cars')) {
+      if (options.method === 'POST') {
+        const newCar = { ...JSON.parse(options.body as string), id: Date.now().toString() };
+        mockData.cars.push(newCar);
+        return newCar;
+      }
+      if (options.method === 'DELETE') {
+        const id = endpoint.split('/').pop();
+        mockData.cars = mockData.cars.filter(c => c.id !== id);
+        return { success: true };
+      }
+      return mockData.cars;
+    }
+    if (endpoint.includes('/trips')) {
+      if (endpoint.includes('/stats')) {
+        return {
+          totalTrips: mockData.trips.length,
+          totalDistance: mockData.trips.reduce((sum, t) => sum + t.distance, 0),
+          totalDuration: mockData.trips.reduce((sum, t) => sum + t.duration, 0)
+        };
+      }
+      if (options.method === 'POST') {
+        const newTrip = { ...JSON.parse(options.body as string), id: Date.now().toString() };
+        mockData.trips.push(newTrip);
+        return newTrip;
+      }
+      if (options.method === 'DELETE') {
+        const id = endpoint.split('/').pop();
+        mockData.trips = mockData.trips.filter(t => t.id !== id);
+        return { success: true };
+      }
+      return mockData.trips;
+    }
+    if (endpoint.includes('/fuel-entries')) {
+      if (options.method === 'POST') {
+        const newEntry = { ...JSON.parse(options.body as string), id: Date.now().toString() };
+        mockData.fuelEntries.push(newEntry);
+        return newEntry;
+      }
+      if (options.method === 'DELETE') {
+        const id = endpoint.split('/').pop();
+        mockData.fuelEntries = mockData.fuelEntries.filter(f => f.id !== id);
+        return { success: true };
+      }
+      return mockData.fuelEntries;
+    }
+    if (endpoint.includes('/maintenance')) {
+      if (options.method === 'POST') {
+        const newItem = { ...JSON.parse(options.body as string), id: Date.now().toString() };
+        mockData.maintenance.push(newItem);
+        return newItem;
+      }
+      if (options.method === 'DELETE') {
+        const id = endpoint.split('/').pop();
+        mockData.maintenance = mockData.maintenance.filter(m => m.id !== id);
+        return { success: true };
+      }
+      if (endpoint.includes('/complete')) {
+        const id = endpoint.split('/')[2];
+        const item = mockData.maintenance.find(m => m.id === id);
+        if (item) item.status = 'completed';
+        return item;
+      }
+      return mockData.maintenance;
+    }
+    if (endpoint.includes('/dashboard/stats')) {
+      return {
+        totalCars: mockData.cars.length,
+        totalTrips: mockData.trips.length,
+        totalFuelCost: mockData.fuelEntries.reduce((sum, f) => sum + f.totalCost, 0),
+        totalMaintenanceCost: mockData.maintenance.reduce((sum, m) => sum + m.cost, 0),
+        averageMPG: 28.5,
+        thisMonthTrips: mockData.trips.length
+      };
+    }
+    if (endpoint.includes('/dashboard/recent-activity')) {
+      return [];
+    }
+    
+    return [];
+  }
+
+  // Real API logic (when USE_MOCK_DATA is false)
   const url = `${API_BASE_URL}${endpoint}`;
   
   console.log('Making API request to:', url);

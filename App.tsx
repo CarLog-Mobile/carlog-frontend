@@ -9,7 +9,7 @@ import FuelScreen from './screens/FuelScreen';
 import MaintenanceScreen from './screens/MaintenanceScreen';
 import OBDLiveScreen from './screens/OBDLiveScreen';
 
-import './global.css';
+// import './global.css'; // Temporarily disabled - NativeWind cache issue
 
 export default function App() {
   const [fontsLoaded, setFontsLoaded] = useState(false);
