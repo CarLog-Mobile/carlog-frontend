@@ -7,12 +7,14 @@ import CarsScreen from './screens/CarsScreen';
 import TripsScreen from './screens/TripsScreen';
 import FuelScreen from './screens/FuelScreen';
 import MaintenanceScreen from './screens/MaintenanceScreen';
+import LoginScreen from './screens/LoginScreen';
+import RegisterScreen from './screens/RegisterScreen';
 
 // import './global.css'; // Temporarily disabled - NativeWind cache issue
 
 export default function App() {
   const [fontsLoaded, setFontsLoaded] = useState(false);
-  const [currentScreen, setCurrentScreen] = useState('Dashboard');
+  const [currentScreen, setCurrentScreen] = useState('Login');
 
   useEffect(() => {
     async function loadFonts() {
@@ -37,6 +39,10 @@ export default function App() {
 
   const renderScreen = () => {
     switch (currentScreen) {
+      case 'Login':
+        return <LoginScreen navigation={navigation} />;
+      case 'Register':
+        return <RegisterScreen navigation={navigation} />;
       case 'Dashboard':
         return <DashboardScreen navigation={navigation} />;
       case 'Cars':
@@ -48,9 +54,9 @@ export default function App() {
       case 'Maintenance':
         return <MaintenanceScreen navigation={navigation} />;
       case 'Settings':
-        return <DashboardScreen navigation={navigation} />; // Placeholder for settings
-      default:
         return <DashboardScreen navigation={navigation} />;
+      default:
+        return <LoginScreen navigation={navigation} />;
     }
   };
 
